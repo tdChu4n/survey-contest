@@ -1,0 +1,680 @@
+/* sections.jsx — page sections (descriptive, factor tab content, qualitative) */
+
+const { useState: _useState, useMemo: _useMemo } = React;
+
+// ---------- Activity info card — bảng mỗi chương trình 1 hàng ----------
+function ActivityCard({ selectedPrograms, responses }) {
+  if (!selectedPrograms || selectedPrograms.size === 0) {
+    return (
+      <Section icon={Icon.Activity} title="Hoạt động">
+        <div style={{ padding: "40px 20px", textAlign: "center", color: "#94a3b8", fontSize: 14 }}>
+          Chọn năm và chương trình ở bên trái để xem báo cáo
+        </div>
+      </Section>
+    );
+  }
+  const programs  = [...selectedPrograms];
+  const infoMap   = window.PROGRAM_INFO    || {};
+  const pMap      = window.PARTICIPANT_MAP || {};
+
+  const rows = programs.map(p => {
+    const info = infoMap[p] || {};
+    const rs   = responses.filter(r => r.program === p);
+    const avg  = rs.length
+      ? (rs.reduce((a, r) => a + r.overall, 0) / rs.length).toFixed(2)
+      : "—";
+    return { p, info, slThamGia: pMap[p] || "—", count: rs.length, avg };
+  });
+
+  const showTotal = programs.length > 1;
+  const totalSL   = programs.reduce((s, p) => s + (pMap[p] || 0), 0);
+  const totalAvg  = responses.length
+    ? (responses.reduce((a, r) => a + r.overall, 0) / responses.length).toFixed(2)
+    : "—";
+
+  const dash = v => v || "—";
+
+  return (
+    <div className="activity">
+      <div className="activity__head">
+        <Icon.Attach style={{ color: "var(--brand-500)" }} />
+        <div className="activity__title">
+          {programs.length === 1 ? programs[0] : `${programs.length} chương trình`}
+        </div>
+      </div>
+      <table className="activity-table">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Tên hoạt động</th>
+            <th>Loại</th>
+            <th>Quy mô</th>
+            <th>Đơn vị tổ chức</th>
+            <th>Đơn vị phối hợp</th>
+            <th>SL tham gia</th>
+            <th>Ngày bắt đầu</th>
+            <th>Ngày kết thúc</th>
+            <th>BĐ khảo sát</th>
+            <th>KT khảo sát</th>
+            <th>Số phiếu</th>
+            <th>Điểm TB</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={row.p}>
+              <td className="mono">{String(i + 1).padStart(2, "0")}</td>
+              <td>{row.p}</td>
+              <td className="mono">{dash(row.info.loaiHoatDong)}</td>
+              <td className="mono">{dash(row.info.quyMo)}</td>
+              <td>{dash(row.info.donViToChuc)}</td>
+              <td>{dash(row.info.donViPhoiHop)}</td>
+              <td className="mono">{row.slThamGia}</td>
+              <td className="mono">{dash(row.info.ngayBatDau)}</td>
+              <td className="mono">{dash(row.info.ngayKetThuc)}</td>
+              <td className="mono">{dash(row.info.batDauKhaoSat)}</td>
+              <td className="mono">{dash(row.info.ketThucKhaoSat)}</td>
+              <td className="mono">{row.count}</td>
+              <td className="mono">{row.avg === "—" ? "—" : `${row.avg} / 7`}</td>
+            </tr>
+          ))}
+          {showTotal && (
+            <tr style={{ fontWeight: 600, background: "var(--surface-soft,#f6f8fa)" }}>
+              <td colSpan={6} style={{ textAlign: "right", paddingRight: 12, color: "#64748b" }}>Tổng cộng</td>
+              <td className="mono">{totalSL || "—"}</td>
+              <td colSpan={4}></td>
+              <td className="mono">{responses.length}</td>
+              <td className="mono">{totalAvg === "—" ? "—" : `${totalAvg} / 7`}</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ---------- Descriptive section: stat cards + gender donut + faculty + cohort ----------
+function DescriptiveSection({ responses, selectedPrograms }) {
+  const total = responses.length;
+
+  // Tổng số sinh viên tham gia (admin điền thủ công cột C sheet Assignments)
+  const pMap = window.PARTICIPANT_MAP || {};
+  const allPrograms = window.PROGRAMS || [];
+  const isAll = !selectedPrograms || selectedPrograms.size === allPrograms.length;
+  const totalParticipants = isAll
+    ? Object.values(pMap).reduce((a, b) => a + b, 0)
+    : [...(selectedPrograms || [])].reduce((s, p) => s + (pMap[p] || 0), 0);
+
+  // Giới tính
+  const gCounts = { Nam: 0, "Nữ": 0 };
+  for (const r of responses) {
+    if (r.gender === "Nam") gCounts["Nam"]++;
+    else if (r.gender === "Nữ") gCounts["Nữ"]++;
+  }
+  const genderData = [
+    { label: "Nam", value: gCounts["Nam"], color: "oklch(0.42 0.18 260)" },
+    { label: "Nữ",  value: gCounts["Nữ"],  color: "oklch(0.62 0.14 230)" },
+  ];
+
+  // Theo khoa — hiện tất cả, kể cả 0 phiếu
+  const ALL_FACULTIES = ['Nhóm ngành A', 'Nhóm ngành B', 'Nhóm ngành C', 'Nhóm ngành D', 'Khác'];
+  const facCounts = {};
+  for (const r of responses) {
+    if (r.faculty) facCounts[r.faculty] = (facCounts[r.faculty] || 0) + 1;
+  }
+  const faculties = ALL_FACULTIES
+    .map(k => ({ label: k, n: facCounts[k] || 0 }))
+    .sort((a, b) => b.n - a.n);
+
+  // Theo khóa
+  const cohCounts = {};
+  for (const r of responses) {
+    if (r.cohort) cohCounts[r.cohort] = (cohCounts[r.cohort] || 0) + 1;
+  }
+  const cohorts = ["51","50","49","Khác"]
+    .filter(k => cohCounts[k] > 0)
+    .map(k => ({ label: k === 'Khác' ? 'Khác' : `Khóa ${k}`, n: cohCounts[k] }));
+
+  const maxN = Math.max(1, total);
+
+  return (
+    <Section icon={Icon.ChartBar} title="Thống kê mô tả" soft>
+      {/* Top: 3 cột */}
+      <div className="stat-grid">
+        {/* Cột trái: 2 stat card */}
+        <div className="stat-card__col">
+          <div className="stat-card">
+            <div className="stat-card__label">Tổng số sinh viên tham gia</div>
+            <div className="stat-card__value">{totalParticipants || "—"}</div>
+            <div className="stat-card__sub">người tham gia chương trình</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-card__label">Tổng số thực hiện khảo sát</div>
+            <div className="stat-card__value">{total}</div>
+            <div className="stat-card__sub">phiếu khảo sát hợp lệ</div>
+          </div>
+        </div>
+
+        {/* Giới tính donut */}
+        <div className="sub-card">
+          <h3 className="sub-card__title">
+            <Icon.PieIcon style={{ color: "var(--ink-soft)" }} />
+            Giới tính
+          </h3>
+          <div className="donut-wrap">
+            <Donut data={genderData} size={160} thickness={26}
+                   centerValue={total} centerLabel="phiếu" />
+            <div className="donut-legend">
+              {genderData.map((d, i) => (
+                <div key={i} className="donut-legend__item">
+                  <div className="donut-legend__row">
+                    <span className="donut-legend__dot" style={{ background: d.color }} />
+                    <span>{d.label}</span>
+                  </div>
+                  <span className="donut-legend__pct">
+                    {total ? Math.round((d.value / total) * 100) : 0}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Theo khoa */}
+        <div className="sub-card">
+          <h3 className="sub-card__title">
+            <Icon.Report style={{ color: "var(--ink-soft)" }} />
+            Thống kê sinh viên tham gia theo khoa
+          </h3>
+          {faculties.length ? faculties.map((f, i) => (
+            <ProgramBar key={i} label={f.label} value={f.n} max={maxN} tone="good" />
+          )) : <p style={{ fontSize: 13, color: "var(--ink-muted)" }}>Chưa có dữ liệu.</p>}
+        </div>
+      </div>
+
+      {/* Bottom: Theo khóa — full width */}
+      <div className="sub-card" style={{ marginTop: 16 }}>
+        <h3 className="sub-card__title">
+          <Icon.ChartBar style={{ color: "var(--ink-soft)" }} />
+          Thống kê sinh viên tham gia theo khóa
+        </h3>
+        <div className="two-col" style={{ marginTop: 8 }}>
+          <div>
+            {cohorts.length ? cohorts.map((c, i) => (
+              <ProgramBar key={i} label={c.label} value={c.n} max={maxN} tone="low" />
+            )) : <p style={{ fontSize: 13, color: "var(--ink-muted)" }}>Chưa có dữ liệu.</p>}
+          </div>
+          <div /> {/* spacer để giữ layout cân */}
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+// ---------- A factor tab (DVTT/CLCT/...) ----------
+function FactorTabContent({ factor, responses }) {
+  const factorAvg = factorMean(responses, factor);
+  const tone = ratingLabel(factorAvg).tone;
+  const { hi, lo } = factorExtremes(responses, factor);
+
+  // bar items
+  const barItems = factor.items.map((it) => {
+    const v = itemMean(responses, it.code);
+    const t = ratingLabel(v).tone;
+    return {
+      label: it.code, value: v,
+      color:
+        t === "good" ? "var(--c-good)" :
+        t === "low"  ? "var(--c-low)"  :
+        t === "bad"  ? "var(--c-bad)"  : "var(--c-mid)",
+    };
+  });
+
+  // line series
+  const palette = [
+    "oklch(0.65 0.16 145)",
+    "oklch(0.7 0.14 230)",
+    "oklch(0.75 0.15 70)",
+    "oklch(0.6 0.18 320)",
+    "oklch(0.62 0.18 25)",
+    "oklch(0.55 0.18 200)",
+  ];
+  const series = factor.items.map((it, i) => ({
+    name: it.code,
+    color: palette[i % palette.length],
+    data: itemDistribution(responses, it.code),
+  }));
+
+  return (
+    <div className="col" style={{ gap: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span className="badge badge--mid" style={{
+          background: "var(--brand-100)", color: "var(--brand-500)", fontSize: 13, padding: "4px 12px"
+        }}>{factor.code}</span>
+        <span style={{ fontSize: 15, fontWeight: 600 }}>— {factor.name}</span>
+        <span className="muted" style={{ fontSize: 12 }}>
+          {factor.items.length} biến quan sát
+        </span>
+      </div>
+      <p className="muted" style={{ margin: "0", fontSize: 13, marginTop: -8 }}>
+        {factor.desc}
+      </p>
+
+      {/* Stat strip */}
+      <div className="stat-strip">
+        <div className={"stat-strip__item stat-strip__item--" + (
+          tone === "good" ? "good" : tone === "low" || tone === "bad" ? "bad" : "mid"
+        )}>
+          <div className="stat-strip__label">Điểm trung bình đánh giá về {factor.name.toLowerCase()}</div>
+          <div className={"stat-strip__value stat-strip__value--" + (
+            tone === "good" ? "good" : tone === "low" || tone === "bad" ? "bad" : "low"
+          )}>
+            {factorAvg.toFixed(2)}
+          </div>
+          <div className="stat-strip__sub">{ratingLabel(factorAvg).text}</div>
+        </div>
+        <div className="stat-strip__item stat-strip__item--good">
+          <div className="stat-strip__label">Biến cao nhất</div>
+          <div className="stat-strip__value stat-strip__value--good">
+            {hi.mean.toFixed(2)}
+          </div>
+          <div className="stat-strip__sub">{hi.code} — {hi.label}</div>
+        </div>
+        <div className="stat-strip__item stat-strip__item--bad">
+          <div className="stat-strip__label">Biến thấp nhất</div>
+          <div className="stat-strip__value stat-strip__value--bad">
+            {lo.mean.toFixed(2)}
+          </div>
+          <div className="stat-strip__sub">{lo.code} — {lo.label}</div>
+        </div>
+        <div className="stat-strip__item stat-strip__item--neutral">
+          <div className="stat-strip__label">Số mẫu</div>
+          <div className="stat-strip__value">{responses.length}</div>
+          <div className="stat-strip__sub">phiếu hợp lệ</div>
+        </div>
+      </div>
+
+      <div className="two-col">
+        <div className="sub-card">
+          <h3 className="sub-card__title">
+            <Icon.ChartBar style={{ color: "var(--ink-soft)" }} />
+            Điểm TB từng biến (ngang)
+          </h3>
+          <HBarChart items={barItems} />
+        </div>
+
+        <div className="sub-card">
+          <h3 className="sub-card__title">
+            <Icon.Report style={{ color: "var(--ink-soft)" }} />
+            Phân phối phản hồi (điểm 1–7)
+          </h3>
+          <LineChart
+            series={series}
+            xLabels={[1,2,3,4,5,6,7]}
+          />
+          <div className="legend">
+            {series.map((s, i) => (
+              <span key={i} className="legend__item">
+                <span className="legend__dot" style={{
+                  background: "transparent",
+                  border: `2px solid ${s.color}`,
+                }} />
+                {s.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="sub-card">
+        <h3 className="sub-card__title">
+          <Icon.Report style={{ color: "var(--ink-soft)" }} />
+          Mức độ đánh giá từng biến
+        </h3>
+        {factor.items.map((it) => {
+          const v = itemMean(responses, it.code);
+          return (
+            <BarRow key={it.code} code={it.code} label={it.label}
+                    value={v} tone={ratingLabel(v).tone} />
+          );
+        })}
+      </div>
+
+      <div className="sub-card">
+        <h3 className="sub-card__title">Nhận xét & đánh giá tổng hợp</h3>
+        <div className="callout">
+          <div className="callout__title">
+            Đánh giá tổng thể: {ratingLabel(factorAvg).text.toUpperCase()}
+          </div>
+          <div className="callout__body">
+            Nhân tố <strong>{factor.code}</strong> đạt mức <strong>{ratingLabel(factorAvg).text}</strong>{" "}
+            ({factorAvg.toFixed(2)}/7).
+          </div>
+        </div>
+        <div className="split">
+          <div className="split__col split__col--good">
+            <div className="split__title">Điểm mạnh</div>
+            <div style={{ fontSize: 13 }}>
+              <strong>{hi.code}</strong> đạt cao nhất ({hi.mean.toFixed(2)}/7)
+            </div>
+          </div>
+          <div className="split__col split__col--bad">
+            <div className="split__title">Cần cải thiện</div>
+            <div style={{ fontSize: 13 }}>
+              Ưu tiên cải thiện <strong>{lo.code}</strong> ({lo.mean.toFixed(2)}/7)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Per-factor color palette ----------
+const FACTOR_COLORS = {
+  DVTT: "oklch(0.62 0.16 240)",   // blue
+  CLCT: "oklch(0.6 0.16 145)",    // green
+  CSVC: "oklch(0.65 0.16 60)",    // amber/orange
+  GTCT: "oklch(0.66 0.18 5)",     // pink-red
+  SHL:  "oklch(0.55 0.18 290)",   // purple
+  LTT:  "oklch(0.5 0.13 175)",    // teal
+};
+
+// ---------- Summary tab (Tổng hợp) ----------
+function SummaryTabContent({ responses, onFactorClick }) {
+  // factor means
+  const factorMeans = FACTORS.map((f) => ({
+    code: f.code, name: f.name,
+    mean: factorMean(responses, f),
+    color: FACTOR_COLORS[f.code],
+  }));
+  const factorRanked = [...factorMeans].sort((a, b) => b.mean - a.mean);
+
+  // composite mean = mean of all factor means
+  const compositeAvg = factorMeans.reduce((a, f) => a + f.mean, 0) / FACTORS.length;
+  const overallAvg = responses.length
+    ? responses.reduce((a, r) => a + r.overall, 0) / responses.length : 0;
+
+  // satisfaction rate: % of responses with SHL avg >= 5
+  const shlFactor = FACTORS.find(f => f.code === "SHL");
+  const satCount = responses.filter(r => {
+    const vals = shlFactor.items.map(it => r[it.code]).filter(v => typeof v === "number");
+    if (!vals.length) return false;
+    return (vals.reduce((a,b)=>a+b,0) / vals.length) >= 5;
+  }).length;
+  const satPct = responses.length ? Math.round((satCount / responses.length) * 100) : 0;
+
+  // overall histogram
+  const overallHist = [0,0,0,0,0,0,0];
+  for (const r of responses) {
+    if (r.overall >= 1 && r.overall <= 7) overallHist[r.overall - 1]++;
+  }
+
+  return (
+    <div className="col" style={{ gap: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span className="badge badge--good" style={{ fontSize: 13, padding: "4px 12px" }}>
+          TỔNG HỢP
+        </span>
+        <span style={{ fontSize: 15, fontWeight: 600 }}>
+          — Bức tranh toàn cảnh 6 nhân tố
+        </span>
+        <span className="muted" style={{ fontSize: 12 }}>
+          {responses.length} phản hồi · 6 nhân tố · 21 biến quan sát
+        </span>
+      </div>
+
+      {/* Top stat strip */}
+      <div className="stat-strip">
+        <div className="stat-strip__item stat-strip__item--neutral">
+          <div className="stat-strip__label">Số mẫu khảo sát</div>
+          <div className="stat-strip__value" style={{ color: "oklch(0.55 0.13 230)" }}>
+            {responses.length}
+          </div>
+          <div className="stat-strip__sub">phiếu hợp lệ</div>
+        </div>
+        <div className="stat-strip__item stat-strip__item--mid">
+          <div className="stat-strip__label">Điểm TB tổng hợp</div>
+          <div className="stat-strip__value stat-strip__value--low">
+            {compositeAvg.toFixed(2)}
+          </div>
+          <div className="stat-strip__sub">{ratingLabel(compositeAvg).text}</div>
+        </div>
+        <div className="stat-strip__item stat-strip__item--neutral"
+             style={{ background: "oklch(0.95 0.025 230)", borderColor: "oklch(0.9 0.04 230)" }}>
+          <div className="stat-strip__label">Điểm tổng thể (Q.cuối)</div>
+          <div className="stat-strip__value" style={{ color: "oklch(0.5 0.16 230)" }}>
+            {overallAvg.toFixed(2)}
+          </div>
+          <div className="stat-strip__sub">trên thang 7 điểm</div>
+        </div>
+        <div className="stat-strip__item stat-strip__item--good">
+          <div className="stat-strip__label">Tỷ lệ hài lòng (SHL ≥ 5)</div>
+          <div className="stat-strip__value stat-strip__value--good">
+            {satPct}%
+          </div>
+          <div className="stat-strip__sub">{satCount}/{responses.length} người tham dự</div>
+        </div>
+      </div>
+
+      {/* Radar + vertical bar comparison */}
+      <div className="two-col">
+        <div className="sub-card">
+          <h3 className="sub-card__title">Biểu đồ radar — 6 nhân tố</h3>
+          <div style={{ display: "grid", placeItems: "center", padding: "12px 0" }}>
+            <RadarChart
+              axes={FACTORS.map(f => f.code)}
+              values={factorMeans.map(f => f.mean)}
+              max={7} min={1} size={300}
+              color="var(--brand-500)"
+            />
+          </div>
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8,
+            marginTop: 4,
+          }}>
+            {factorMeans.map(f => (
+              <div key={f.code} style={{
+                display: "flex", alignItems: "center", gap: 8,
+                fontSize: 11, fontFamily: "var(--font-mono)"
+              }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: "50%",
+                  background: f.color, flexShrink: 0
+                }} />
+                <span style={{ color: "var(--ink)", fontWeight: 600 }}>{f.code}</span>
+                <span style={{ color: "var(--ink-muted)" }}>{f.mean.toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="sub-card">
+          <h3 className="sub-card__title">So sánh điểm TB các nhân tố</h3>
+          <VBarChart
+            items={factorMeans.map(f => ({
+              label: f.code, value: f.mean, color: f.color
+            }))}
+            max={7} min={1} height={300}
+          />
+        </div>
+      </div>
+
+      {/* Overall distribution histogram */}
+      <div className="sub-card">
+        <h3 className="sub-card__title">
+          Phân phối điểm tổng thể — câu đánh giá cuối
+          <span className="muted" style={{ fontWeight: 400, fontSize: 12, marginLeft: 8 }}>
+            n = {responses.length} phiếu
+          </span>
+        </h3>
+        <Histogram
+          data={overallHist}
+          xLabels={[1,2,3,4,5,6,7]}
+          colors={[
+            "oklch(0.62 0.18 25)",   // 1 — đỏ
+            "oklch(0.66 0.18 5)",    // 2 — đỏ-hồng
+            "oklch(0.7 0.16 60)",    // 3 — cam/amber
+            "oklch(0.62 0.16 240)",  // 4 — xanh dương nhạt
+            "oklch(0.55 0.18 240)",  // 5 — xanh dương đậm (điểm phổ biến nhất thường rơi vào 5)
+            "oklch(0.6 0.16 145)",   // 6 — xanh lá
+            "oklch(0.55 0.18 145)",  // 7 — xanh lá đậm
+          ]}
+        />
+        <div className="hist-legend">
+          {[
+            { range: "1–2", label: "Hoàn toàn không đồng ý / Không đồng ý", color: "oklch(0.62 0.18 25)" },
+            { range: "3",   label: "Hơi không đồng ý", color: "oklch(0.7 0.16 60)" },
+            { range: "4",   label: "Trung lập", color: "oklch(0.62 0.16 240)" },
+            { range: "5",   label: "Hơi đồng ý", color: "oklch(0.55 0.18 240)" },
+            { range: "6–7", label: "Đồng ý / Hoàn toàn đồng ý", color: "oklch(0.55 0.18 145)" },
+          ].map((g, i) => (
+            <div key={i} className="hist-legend__item">
+              <span className="hist-legend__chip" style={{
+                background: g.color, opacity: 0.28,
+                borderColor: g.color
+              }} />
+              <span className="hist-legend__range">{g.range}</span>
+              <span className="hist-legend__label">{g.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Ranked factor list */}
+      <div className="sub-card">
+        <h3 className="sub-card__title">
+          Xếp hạng nhân tố
+          <span className="muted" style={{ fontWeight: 400, fontSize: 12, marginLeft: 8 }}>
+            — nhấn để xem chi tiết
+          </span>
+        </h3>
+        <div className="col" style={{ gap: 10 }}>
+          {factorRanked.map((r, i) => {
+            const tone = ratingLabel(r.mean).tone;
+            const pct = Math.max(0, Math.min(100, ((r.mean - 1) / 6) * 100));
+            return (
+              <button key={r.code}
+                      onClick={() => onFactorClick && onFactorClick(r.code)}
+                      className="rank-row">
+                <span className="rank-row__num">{i + 1}</span>
+                <span className="rank-row__code" style={{ color: r.color }}>{r.code}</span>
+                <span className="rank-row__name">{r.name}</span>
+                <span className="rank-row__bar">
+                  <span className="rank-row__fill" style={{
+                    width: pct + "%", background: r.color
+                  }} />
+                </span>
+                <span className="rank-row__val">{r.mean.toFixed(2)}</span>
+                <span className={"badge badge--" + tone}>{ratingLabel(r.mean).text}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Qualitative tab ----------
+function QualitativeTabContent({ responses }) {
+  const cols = [
+    { key: "learn",    title: "Bài học & giá trị có thể áp dụng" },
+    { key: "trouble",  title: "Khó khăn / trải nghiệm chưa thoải mái" },
+    { key: "interest", title: "Mối quan tâm trong học kỳ này" },
+    { key: "feedback", title: "Góp ý cho chương trình" },
+  ];
+  return (
+    <div className="col" style={{ gap: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span className="badge badge--mid" style={{ fontSize: 13, padding: "4px 12px" }}>
+          ĐỊNH TÍNH
+        </span>
+        <span style={{ fontSize: 15, fontWeight: 600 }}>
+          — Phản hồi mở từ người tham gia
+        </span>
+        <span className="muted" style={{ fontSize: 12 }}>
+          {responses.length} phản hồi · 4 chủ đề
+        </span>
+      </div>
+      <div className="two-col">
+        {cols.map(c => (
+          <div key={c.key} className="sub-card">
+            <h3 className="sub-card__title">{c.title}</h3>
+            <div className="qual-list">
+              {responses.map((r, i) => (
+                <div key={r.id + c.key} className="qual-item">
+                  <div className="qual-item__quote">{r[c.key]}</div>
+                  <div className="qual-item__meta">
+                    {r.id} · {r.program} · {r.ts.split(" ")[0]}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Mailbox section (admin view) ----------
+function MailboxSection({ entries }) {
+  const [search, setSearch] = _useState('');
+
+  const filtered = _useMemo(() => {
+    if (!search.trim()) return entries;
+    const q = search.toLowerCase();
+    return entries.filter(e =>
+      e.email.toLowerCase().includes(q) || e.content.toLowerCase().includes(q)
+    );
+  }, [entries, search]);
+
+  return (
+    <Section icon={Icon.Notes} title="Hòm thư lắng nghe thanh niên">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 13, color: '#64748b' }}>
+          {entries.length} ý kiến
+        </span>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Tìm kiếm theo email hoặc nội dung..."
+          style={{
+            flex: 1, minWidth: 200, padding: '7px 12px',
+            border: '1px solid #cbd5e1', borderRadius: 8,
+            fontSize: 13, fontFamily: 'inherit', outline: 'none',
+          }}
+        />
+        {search && (
+          <button onClick={() => setSearch('')}
+                  style={{ fontSize: 12, color: '#dc2626', background: '#fef2f2',
+                           border: '1px solid #fca5a5', borderRadius: 6,
+                           padding: '4px 10px', cursor: 'pointer' }}>
+            ✕ Xóa
+          </button>
+        )}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div style={{ padding: '40px 20px', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
+          {entries.length === 0 ? 'Chưa có ý kiến nào được gửi.' : 'Không tìm thấy kết quả.'}
+        </div>
+      ) : (
+        <div className="qual-list">
+          {filtered.map((e, i) => (
+            <div key={i} className="qual-item">
+              <div className="qual-item__quote" style={{ whiteSpace: 'pre-wrap' }}>{e.content}</div>
+              <div className="qual-item__meta">{e.ts} · {e.email}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Section>
+  );
+}
+
+Object.assign(window, {
+  ActivityCard, DescriptiveSection, FactorTabContent, SummaryTabContent, QualitativeTabContent, MailboxSection
+});
