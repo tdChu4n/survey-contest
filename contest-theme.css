@@ -487,6 +487,19 @@ body {
 }
 
 /* Admin shell — visual language derived from prototype-admin.html */
+.admin-viewport-stage {
+  min-height: calc(100vh - 22px);
+  min-height: calc(100svh - 22px);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-viewport-stage > .home-menu,
+.admin-viewport-stage > .admin-subpage,
+.admin-viewport-stage > .dashboard-layout {
+  flex: 1 0 auto;
+}
+
 .contest-admin-nav {
   min-height: 76px;
   padding: 10px clamp(18px, 4vw, 64px);

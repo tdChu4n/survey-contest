@@ -484,6 +484,7 @@ function App() {
 
   return (
     <>
+      <div className="admin-viewport-stage">
       <TopNav />
       {!loading && updatedAt && (
         <div className="admin-status-row">
@@ -547,6 +548,7 @@ function App() {
           </main>
         </div>
       )}
+      </div>
 
       <Footer />
       {showAddModal && (
