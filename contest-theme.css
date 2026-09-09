@@ -205,7 +205,13 @@ body {
 
 .contest-feature svg { width: 23px; height: 23px; flex: 0 0 auto; }
 
-#surveySection { max-width: 1180px; margin: 0 auto; padding: 64px 22px 90px; }
+#surveySection {
+  width: 100%;
+  max-width: 1180px;
+  min-height: calc(100vh - 94px);
+  margin: 0 auto;
+  padding: 64px 22px 90px;
+}
 .page-title { color: var(--contest-navy) !important; font-weight: 800 !important; }
 .page-title::after { content: ""; display: block; width: 68px; height: 5px; margin-top: 12px; border-radius: 5px; background: var(--contest-orange); }
 
