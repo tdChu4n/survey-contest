@@ -4,9 +4,8 @@ window.CONTEST_CONFIG = Object.freeze({
   contactEmail: 'contact@example.edu.vn',
   address: 'Thông tin được ẩn danh phục vụ vòng đánh giá',
 
-  // Điền URL của Apps Script dành riêng cho bản dự thi sau khi triển khai.
-  // Backend dùng cùng cấu trúc dữ liệu với web cũ nhưng vẫn triển khai tách biệt.
-  appsScriptUrl: '',
+  // Tạm thời dùng backend hiện có của web cũ cho bản dự thi.
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbyP9XvRCgVKV7y_SEtQ4Oz1bBlNkgnKzhqT19DrtqhFngE4C3qLq0Yb60buuM_12H_R/exec',
 
   // Điền OAuth Client ID dành riêng cho domain/deployment của bản dự thi.
   googleClientId: '84059448728-7698b8sorrp7p4qrq2shhiapvbsgd22u.apps.googleusercontent.com',
