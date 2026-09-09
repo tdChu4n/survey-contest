@@ -1176,10 +1176,7 @@
     document.getElementById('tableContainer').innerHTML =
       '<div class="state-msg"><div class="spinner"></div> Đang tải dữ liệu...</div>';
     try {
-      if (!CONFIG.APPS_SCRIPT_URL) {
-        renderTable([{ rowIndex: 1, year: '2026', courseName: 'Hoạt động mẫu dành cho vòng đánh giá', locked: false, status: 'Chưa thực hiện', ketThucKhaoSat: 'Không thời hạn' }]);
-        return;
-      }
+      if (!CONFIG.APPS_SCRIPT_URL) throw new Error('Chưa cấu hình backend');
       const url = CONFIG.APPS_SCRIPT_URL + '?action=getCourses&email=' + encodeURIComponent(currentUser.email);
       const data = await (await fetch(url)).json();
       renderTable(data.courses || []);
@@ -1261,7 +1258,14 @@
     </div>`;
 
     // Thông tin cá nhân
-    const FACULTIES = ['Nhóm ngành A','Nhóm ngành B','Nhóm ngành C','Nhóm ngành D','Khác'];
+    const FACULTIES = [
+      'Khoa Toán - Thống kê','Khoa Kinh tế','Khoa Lý luận chính trị','Khoa Thiết kế Truyền thông',
+      'Khoa Công nghệ thông tin kinh doanh','Khoa Ngoại ngữ',
+      'Khoa Kinh doanh quốc tế - Marketing','Khoa Quản trị','Khoa Tài chính',
+      'Khoa Ngân hàng','Khoa Kế toán','Khoa Du lịch','Khoa Tài chính công',
+      'Khoa Luật','Khoa Quản lý nhà nước',
+      'Khác',
+    ];
     html += `<div class="info-grid">
       <div class="info-field">
         <label>Họ và tên đệm <span class="req">*</span></label>
@@ -1283,9 +1287,9 @@
         </select>
       </div>
       <div class="info-field">
-        <label>Nhóm ngành <span class="req">*</span></label>
+        <label>Khoa <span class="req">*</span></label>
         <select id="field_faculty" name="faculty">
-          <option value="">-- Chọn nhóm ngành --</option>
+          <option value="">-- Chọn khoa --</option>
           ${FACULTIES.map(f => `<option>${esc(f)}</option>`).join('')}
         </select>
       </div>
@@ -1305,8 +1309,8 @@
         <input type="tel" id="field_phone" name="phone">
       </div>
       <div class="info-field">
-        <label>Email trường <span class="req">*</span></label>
-        <input type="email" id="field_emailUeh" name="emailUeh" placeholder="Email do trường cấp">
+        <label>Email UEH <span class="req">*</span></label>
+        <input type="email" id="field_emailUeh" name="emailUeh" placeholder="...@st.ueh.edu.vn">
       </div>
       <div class="info-field">
         <label>Email khác <span class="req">*</span></label>
@@ -1377,11 +1381,11 @@
       { id: 'field_firstName', name: 'Tên' },
       { id: 'field_studentClass', name: 'Lớp' },
       { id: 'field_cohort', name: 'Khóa' },
-      { id: 'field_faculty', name: 'Nhóm ngành' },
+      { id: 'field_faculty', name: 'Khoa' },
       { id: 'field_gender', name: 'Giới tính' },
       { id: 'field_studentId', name: 'MSSV' },
       { id: 'field_phone', name: 'Số điện thoại' },
-      { id: 'field_emailUeh', name: 'Email trường' },
+      { id: 'field_emailUeh', name: 'Email UEH' },
       { id: 'field_emailOther', name: 'Email khác' },
       { id: 'field_facebook', name: 'Link Facebook' }
     ];
@@ -1464,9 +1468,8 @@
         ...formData
       });
 
-      const result = CONFIG.APPS_SCRIPT_URL
-        ? await (await fetch(CONFIG.APPS_SCRIPT_URL + '?' + params)).json()
-        : { success: true };
+      if (!CONFIG.APPS_SCRIPT_URL) throw new Error('Chưa cấu hình backend');
+      const result = await (await fetch(CONFIG.APPS_SCRIPT_URL + '?' + params)).json();
 
       if (result.success) {
         document.getElementById('successOverlay').classList.add('show');
@@ -1520,9 +1523,8 @@
         email:   currentUser.email,
         content,
       });
-      const result = CONFIG.APPS_SCRIPT_URL
-        ? await (await fetch(CONFIG.APPS_SCRIPT_URL + '?' + params)).json()
-        : { success: true };
+      if (!CONFIG.APPS_SCRIPT_URL) throw new Error('Chưa cấu hình backend');
+      const result = await (await fetch(CONFIG.APPS_SCRIPT_URL + '?' + params)).json();
 
       if (result.success) {
         document.getElementById('mailboxSuccess').classList.add('show');
@@ -1556,7 +1558,7 @@ function renderCELGForm() {
   let html = `
     <div class="email-display">Xin chào, <strong>${esc(currentUser.email)}</strong>. Email này sẽ được ghi lại.</div>
     <div class="scale-note">
-      Khảo sát nhu cầu, sở thích và các yếu tố ảnh hưởng đến ý định tham gia hoạt động/sự kiện của sinh viên.
+      Khảo sát nhu cầu, sở thích và các yếu tố ảnh hưởng đến ý định tham gia hoạt động/sự kiện của sinh viên UEH.
     </div>
   `;
 
@@ -1568,16 +1570,16 @@ function renderCELGForm() {
       <div class="info-field"><label>Tên <span class="req">*</span></label><input type="text" id="field_firstName" name="firstName"></div>
       <div class="info-field"><label>Lớp <span class="req">*</span></label><input type="text" id="field_studentClass" name="studentClass"></div>
       <div class="info-field"><label>Khóa <span class="req">*</span></label><select id="field_cohort" name="cohort"><option value="">-- Chọn --</option><option>49</option><option>50</option><option>51</option><option>Khác</option></select></div>
-      <div class="info-field"><label>Nhóm ngành <span class="req">*</span></label><select id="field_faculty" name="faculty"><option value="">-- Chọn nhóm ngành --</option>${['Nhóm ngành A','Nhóm ngành B','Nhóm ngành C','Nhóm ngành D','Khác'].map(f => `<option>${esc(f)}</option>`).join('')}</select></div>
+      <div class="info-field"><label>Khoa <span class="req">*</span></label><select id="field_faculty" name="faculty"><option value="">-- Chọn khoa --</option>${['Toán - Thống kê', 'Kinh tế', 'Quản trị', 'Tài chính', 'Kế toán', 'Luật', 'Công nghệ thông tin kinh doanh', 'Ngoại ngữ', 'Ngân hàng', 'Du lịch', 'Kinh doanh quốc tế - Marketing', 'Lý luận chính trị', 'Thiết kế truyền thông', 'Khoa học xã hội'].map(f => `<option>${esc(f)}</option>`).join('')}</select></div>
       <div class="info-field"><label>Giới tính <span class="req">*</span></label><select id="field_gender" name="gender"><option value="">-- Chọn --</option><option>Nam</option><option>Nữ</option></select></div>
       <div class="info-field"><label>MSSV <span class="req">*</span></label><input type="text" id="field_studentId" name="studentId"></div>
       <div class="info-field"><label>Số điện thoại <span class="req">*</span></label><input type="tel" id="field_phone" name="phone"></div>
-      <div class="info-field"><label>Email trường <span class="req">*</span></label><input type="email" id="field_emailUeh" name="emailUeh" placeholder="Email do trường cấp"></div>
+      <div class="info-field"><label>Email UEH <span class="req">*</span></label><input type="email" id="field_emailUeh" name="emailUeh"></div>
       <div class="info-field"><label>Email khác <span class="req">*</span></label><input type="email" id="field_emailOther" name="emailOther"></div>
-      <div class="info-field" style="grid-column: 1 / -1;"><label>Link Facebook <span class="req">*</span></label><input type="url" id="field_facebook" name="facebook" placeholder="https://www.facebook.com/..."></div>
+      <div class="info-field" style="grid-column: 1 / -1;"><label>Link Facebook <span class="req">*</span></label><input type="url" id="field_facebook" name="facebook"></div>
     </div>
     <div class="text-section">
-      <label>Trong 12 tháng qua, bạn tham gia khoảng bao nhiêu hoạt động/sự kiện tại cơ sở giáo dục? <span class="req">*</span></label>
+      <label>Trong 12 tháng qua, bạn tham gia khoảng bao nhiêu hoạt động/sự kiện tại UEH? <span class="req">*</span></label>
       <div class="radio-group" style="display:flex; flex-direction:column; gap:8px;">
         <label><input type="radio" name="Q_A8" value="Chưa tham gia"> Chưa tham gia</label>
         <label><input type="radio" name="Q_A8" value="1–2 hoạt động"> 1–2 hoạt động</label>
@@ -1595,7 +1597,7 @@ function renderCELGForm() {
     <h3 style="margin-top:20px; color:#005c50; border-bottom:2px solid #005c50; padding-bottom:5px; margin-bottom:15px;">PHẦN B: SINH VIÊN QUAN TÂM ĐẾN HOẠT ĐỘNG GÌ?</h3>
     
     <div class="text-section">
-      <label>1. Bạn quan tâm đến những mảng hoạt động nào do đơn vị phụ trách tổ chức? (Có thể chọn nhiều) <span class="req">*</span></label>
+      <label>1. Bạn quan tâm đến những mảng hoạt động nào do Đoàn - Hội tổ chức? (Có thể chọn nhiều) <span class="req">*</span></label>
       <div class="checkbox-group" id="group_B1" style="display:flex; flex-direction:column; gap:8px;">
         ${mangHoatDong.map(opt => `<label><input type="checkbox" name="Q_B1" value="${opt}" onchange="updateB2Options()"> ${opt}</label>`).join('')}
         <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" name="Q_B1" value="Khác" id="chk_B1_other" onchange="updateB2Options()"> Khác: <input type="text" id="txt_B1_other" style="border:1px solid #ccc; border-radius:4px; padding:4px;"></label>
@@ -1603,7 +1605,7 @@ function renderCELGForm() {
     </div>
 
     <div class="text-section">
-      <label>2. Bạn mong muốn đơn vị phụ trách ưu tiên tổ chức những mảng nào nhất? (Chọn tối đa 3) <span class="req">*</span></label>
+      <label>2. Nếu chỉ được ưu tiên một mảng, bạn mong muốn Đoàn–Hội tập trung tổ chức mảng nào nhất? (Chọn tối đa 3) <span class="req">*</span></label>
       <div class="checkbox-group" id="group_B2" style="display:flex; flex-direction:column; gap:8px;">
         <em style="color:#888;">Vui lòng chọn ở câu 1 trước</em>
       </div>
@@ -1621,13 +1623,13 @@ function renderCELGForm() {
   // --- PHẦN C ---
   const LIKERT_LABELS_C = ['1<br><small>(Rất không hài lòng)</small>', '2', '3', '4', '5', '6', '7<br><small>(Rất hài lòng)</small>'];
   const pC_items = [
-    {c:'C_1', l:'1. Mức độ hài lòng chung của bạn về các hoạt động trong kỳ vừa qua'},
+    {c:'C_1', l:'1. Mức độ hài lòng chung của bạn về các hoạt động Đoàn - Hội khoa trong kỳ vừa qua'},
     {c:'C_2', l:'2. Chất lượng nội dung, hình thức tổ chức của các hoạt động'},
     {c:'C_3', l:'3. Mức độ đa dạng của các loại hình hoạt động (học thuật, tình nguyện, hỗ trợ sinh viên, phong trào...)'},
-    {c:'C_4', l:'4. Sự hỗ trợ của đơn vị phụ trách khi bạn gặp khó khăn, thắc mắc'},
+    {c:'C_4', l:'4. Sự hỗ trợ của Đoàn - Hội khi bạn gặp khó khăn, thắc mắc (học tập, đời sống, thủ tục...)'},
     {c:'C_5', l:'5. Tốc độ và sự rõ ràng khi giải đáp thắc mắc/phản hồi của sinh viên'},
     {c:'C_6', l:'6. Mức độ kịp thời, đầy đủ của thông tin được truyền tải (thời gian, địa điểm, nội dung hoạt động)'},
-    {c:'C_7', l:'7. Thái độ và tinh thần phục vụ của đội ngũ tổ chức'}
+    {c:'C_7', l:'7. Thái độ, tinh thần phục vụ của các bạn cán bộ Đoàn - Hội'}
   ];
   html += `<h3 style="margin-top:20px; color:#005c50; border-bottom:2px solid #005c50; padding-bottom:5px; margin-bottom:15px;">PHẦN C. MỨC ĐỘ HÀI LÒNG ĐA CHIỀU</h3>`;
   html += `<div class="factor-card">
@@ -1668,7 +1670,7 @@ function renderCELGForm() {
     <h3 style="margin-top:20px; color:#005c50; border-bottom:2px solid #005c50; padding-bottom:5px; margin-bottom:15px;">PHẦN E. RÀO CẢN THAM GIA</h3>
     
     <div class="text-section">
-      <label>1. Khi bạn quyết định không tham gia hoặc ít tham gia một hoạt động/sự kiện, những lý do nào thường ảnh hưởng đến bạn? (Chọn tối đa 3) <span class="req">*</span></label>
+      <label>1. Khi bạn quyết định không tham gia hoặc ít tham gia một hoạt động/sự kiện UEH, những lý do nào thường ảnh hưởng đến bạn? (Chọn tối đa 3) <span class="req">*</span></label>
       <div class="checkbox-group" id="group_E1" style="display:flex; flex-direction:column; gap:8px;">
         ${raoCan.map(opt => `<label><input type="checkbox" name="Q_E1" value="${opt}" onchange="updateE2Options()"> ${opt}</label>`).join('')}
         <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" name="Q_E1" value="Khác" id="chk_E1_other" onchange="updateE2Options()"> Khác: <input type="text" id="txt_E1_other" style="border:1px solid #ccc; border-radius:4px; padding:4px;"></label>
@@ -1713,11 +1715,11 @@ function renderCELGForm() {
 
     <h3 style="margin-top:20px; color:#005c50; border-bottom:2px solid #005c50; padding-bottom:5px; margin-bottom:15px;">PHẦN G. CÂU HỎI ĐỊNH TÍNH</h3>
     <div class="text-section">
-      <label>1. Theo bạn, đơn vị phụ trách nên tổ chức thêm những hoạt động hoặc sự kiện nào để đáp ứng tốt hơn nhu cầu của người học? <span class="req">*</span></label>
+      <label>1. Theo bạn, Đoàn - Hội UEH nên tổ chức thêm những hoạt động hoặc sự kiện nào để đáp ứng tốt hơn nhu cầu của sinh viên? <span class="req">*</span></label>
       <textarea id="Q_G1" rows="3"></textarea>
     </div>
     <div class="text-section">
-      <label>2. Nếu bạn có thể thay đổi một điều trong các hoạt động/sự kiện hiện nay, bạn muốn thay đổi điều gì nhất? <span class="req">*</span></label>
+      <label>2. Nếu bạn có thể thay đổi một điều trong các hoạt động/sự kiện hiện nay của UEH, bạn muốn thay đổi điều gì nhất? <span class="req">*</span></label>
       <textarea id="Q_G2" rows="3"></textarea>
     </div>
   `;
@@ -1812,11 +1814,11 @@ function validateCELGForm() {
     { id: 'field_firstName', name: 'Tên' },
     { id: 'field_studentClass', name: 'Lớp' },
     { id: 'field_cohort', name: 'Khóa' },
-    { id: 'field_faculty', name: 'Nhóm ngành' },
+    { id: 'field_faculty', name: 'Khoa' },
     { id: 'field_gender', name: 'Giới tính' },
     { id: 'field_studentId', name: 'MSSV' },
     { id: 'field_phone', name: 'Số điện thoại' },
-    { id: 'field_emailUeh', name: 'Email trường' },
+    { id: 'field_emailUeh', name: 'Email UEH' },
     { id: 'field_emailOther', name: 'Email khác' },
     { id: 'field_facebook', name: 'Link Facebook' }
   ];

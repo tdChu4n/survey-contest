@@ -4,8 +4,8 @@ window.CONTEST_CONFIG = Object.freeze({
   contactEmail: 'contact@example.edu.vn',
   address: 'Thông tin được ẩn danh phục vụ vòng đánh giá',
 
-  // Điền URL của Apps Script dành riêng cho bản dự thi sau khi triển khai
-  // apps-script.gs trong thư mục này. Không dùng URL production.
+  // Điền URL của Apps Script dành riêng cho bản dự thi sau khi triển khai.
+  // Backend dùng cùng cấu trúc dữ liệu với web cũ nhưng vẫn triển khai tách biệt.
   appsScriptUrl: '',
 
   // Điền OAuth Client ID dành riêng cho domain/deployment của bản dự thi.

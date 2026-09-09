@@ -652,23 +652,8 @@ function AddActivityModal({ onClose, onSaved }) {
     setSaving(true);
 
     if (!APPS_SCRIPT_URL) {
-      const year = form.ngayBatDau ? new Date(form.ngayBatDau + 'T00:00:00').getFullYear() : new Date().getFullYear();
-      if (!window.PROGRAMS.includes(form.courseName.trim())) {
-        window.PROGRAMS = [...window.PROGRAMS, form.courseName.trim()];
-      }
-      window.PARTICIPANT_MAP[form.courseName.trim()] = parseInt(form.participants, 10);
-      window.PROGRAM_YEARS[form.courseName.trim()] = year;
-      window.PROGRAM_INFO[form.courseName.trim()] = {
-        loaiHoatDong: form.loaiHoatDong,
-        quyMo: form.quyMo,
-        donViToChuc: form.donViToChuc,
-        donViPhoiHop: form.donViPhoiHop,
-        ngayBatDau: form.ngayBatDau,
-        ngayKetThuc: form.ngayKetThuc,
-        batDauKhaoSat: form.batDauKhaoSat,
-        ketThucKhaoSat: form.ketThucKhaoSat,
-      };
-      window.setTimeout(onSaved, 350);
+      setError('Chưa cấu hình backend.');
+      setSaving(false);
       return;
     }
 
@@ -710,7 +695,7 @@ function AddActivityModal({ onClose, onSaved }) {
 
             <div className="form-field">
               <label>Tên hoạt động <span className="req">*</span></label>
-              <input type="text" name="courseName" value={form.courseName} onChange={handleChange} required placeholder="Ví dụ: Chương trình phát triển kỹ năng" />
+              <input type="text" name="courseName" value={form.courseName} onChange={handleChange} required placeholder="Ví dụ: 2026_TTK_01_Hành trình Chín tháng Giêng liên khoa Toán - Thống kê và khoa Kinh tế" />
             </div>
 
             <div className="form-row-2">
@@ -727,18 +712,18 @@ function AddActivityModal({ onClose, onSaved }) {
             <div className="form-row-2">
               <div className="form-field">
                 <label>Đơn vị tổ chức</label>
-                <input type="text" name="donViToChuc" value={form.donViToChuc} onChange={handleChange} placeholder="Ví dụ: Đoàn - Hội" />
+                <input type="text" name="donViToChuc" value={form.donViToChuc} onChange={handleChange} placeholder="Ví dụ: LCH SV khoa Toán - Thống kê" />
               </div>
               <div className="form-field">
                 <label>Đơn vị phối hợp</label>
-                <input type="text" name="donViPhoiHop" value={form.donViPhoiHop} onChange={handleChange} placeholder="Ví dụ: Câu lạc bộ sinh viên" />
+                <input type="text" name="donViPhoiHop" value={form.donViPhoiHop} onChange={handleChange} placeholder="Ví dụ: LCH SV khoa Kinh tế" />
               </div>
             </div>
 
             <div className="form-row-2">
               <div className="form-field">
                 <label>Số lượng tham gia <span className="req">*</span></label>
-                <input type="number" name="participants" value={form.participants} onChange={handleChange} required min="1" placeholder="Ví dụ: 52" />
+                <input type="number" name="participants" value={form.participants} onChange={handleChange} required min="0" placeholder="Ví dụ: 52" />
               </div>
               <div className="form-field">
                 <label>Tổng kinh phí (VNĐ)</label>

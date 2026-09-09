@@ -83,6 +83,7 @@ function nexusClassification(importance, performance) {
 }
 
 function buildNexusInsights(responses) {
+  if (!responses.length) return [];
   return NEXUS_ACTION_KNOWLEDGE.map(rule => {
     const meta = nexusItemMeta(rule.code);
     const values = responses.map(r => Number(r[rule.code])).filter(Number.isFinite);

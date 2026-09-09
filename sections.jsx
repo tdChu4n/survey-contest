@@ -117,7 +117,14 @@ function DescriptiveSection({ responses, selectedPrograms }) {
   ];
 
   // Theo khoa — hiện tất cả, kể cả 0 phiếu
-  const ALL_FACULTIES = ['Nhóm ngành A', 'Nhóm ngành B', 'Nhóm ngành C', 'Nhóm ngành D', 'Khác'];
+  const ALL_FACULTIES = [
+    'Khoa Toán - Thống kê','Khoa Kinh tế','Khoa Lý luận chính trị','Khoa Thiết kế Truyền thông',
+    'Khoa Công nghệ thông tin kinh doanh','Khoa Ngoại ngữ',
+    'Khoa Kinh doanh quốc tế - Marketing','Khoa Quản trị','Khoa Tài chính',
+    'Khoa Ngân hàng','Khoa Kế toán','Khoa Du lịch','Khoa Tài chính công',
+    'Khoa Luật','Khoa Quản lý nhà nước',
+    'Khác'
+  ];
   const facCounts = {};
   for (const r of responses) {
     if (r.faculty) facCounts[r.faculty] = (facCounts[r.faculty] || 0) + 1;

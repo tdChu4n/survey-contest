@@ -70,93 +70,10 @@ window.FACTORS = [
   }
 ];
 
-window.PROGRAMS = ['Hoạt động mẫu A', 'Hoạt động mẫu B', 'Hoạt động mẫu C'];
-window.PROGRAM_YEARS = {
-  'Hoạt động mẫu A': 2026,
-  'Hoạt động mẫu B': 2026,
-  'Hoạt động mẫu C': 2025
-};
-window.PROGRAM_INFO = {
-  'Hoạt động mẫu A': { loaiHoatDong: '1', quyMo: '3', donViToChuc: 'Đơn vị A', donViPhoiHop: 'Đơn vị B', ngayBatDau: '12/03/2026', ngayKetThuc: '12/03/2026' },
-  'Hoạt động mẫu B': { loaiHoatDong: '2', quyMo: '4', donViToChuc: 'Đơn vị B', donViPhoiHop: 'Đơn vị C', ngayBatDau: '18/04/2026', ngayKetThuc: '18/04/2026' },
-  'Hoạt động mẫu C': { loaiHoatDong: '3', quyMo: '3', donViToChuc: 'Đơn vị C', donViPhoiHop: '', ngayBatDau: '22/11/2025', ngayKetThuc: '22/11/2025' }
-};
-window.PARTICIPANT_MAP = { 'Hoạt động mẫu A': 120, 'Hoạt động mẫu B': 90, 'Hoạt động mẫu C': 75 };
-
-// Dữ liệu tổng hợp giả lập để bản dự thi xem được đầy đủ biểu đồ khi chưa nối backend.
-const DEMO_OPEN_RESPONSES = [
-  {
-    learn: 'Nội dung thực tế giúp tôi hiểu rõ hơn cách làm việc nhóm.',
-    trouble: 'Thông báo thay đổi địa điểm khá trễ nên tôi đến nhầm phòng.',
-    interest: 'Tôi muốn có thêm hoạt động kỹ năng và định hướng nghề nghiệp.',
-    feedback: 'Nên gửi lịch và địa điểm chính thức sớm hơn ít nhất vài ngày.'
-  },
-  {
-    learn: 'Phần chia sẻ của diễn giả có nhiều ví dụ hữu ích.',
-    trouble: 'Âm thanh nhỏ, micro đôi lúc bị rè và cuối phòng khó nghe.',
-    interest: 'Mong có thêm workshop thực hành theo nhóm nhỏ.',
-    feedback: 'Ban tổ chức nên kiểm tra micro và thiết bị trước chương trình.'
-  },
-  {
-    learn: 'Tôi học được cách trình bày ý tưởng và kết nối với bạn mới.',
-    trouble: 'Chương trình kéo dài hơn lịch trình và phần cuối diễn ra khá vội.',
-    interest: 'Tôi quan tâm đến hoạt động trải nghiệm và kết nối doanh nghiệp.',
-    feedback: 'Nên kiểm soát thời gian từng phần và có khoảng dự phòng.'
-  },
-  {
-    learn: 'Hoạt động giúp tôi tự tin hơn khi trao đổi trước đám đông.',
-    trouble: 'Khâu check-in xếp hàng lâu và chưa biết hỏi ai khi cần hỗ trợ.',
-    interest: 'Tôi muốn tham gia thêm các hoạt động phát triển kỹ năng.',
-    feedback: 'Nên bố trí riêng bàn check-in và bàn giải đáp.'
-  },
-  {
-    learn: 'Nội dung phù hợp và có thể áp dụng vào việc học.',
-    trouble: 'Thông tin trên email và bài đăng chưa thống nhất về thời gian.',
-    interest: 'Mong có thêm nội dung chuyên môn gắn với tình huống thực tế.',
-    feedback: 'Cần dùng một mẫu thông báo thống nhất trên tất cả các kênh.'
-  },
-  {
-    learn: 'Tôi nhận được thêm kiến thức và một số mối quan hệ mới.',
-    trouble: 'Không có.',
-    interest: 'Tôi quan tâm đến hoạt động học thuật và giao lưu.',
-    feedback: 'Có thể dành thêm thời gian cho phần hỏi đáp.'
-  }
-];
-
-window.SURVEY_RESPONSES = Array.from({ length: 36 }, (_, index) => {
-  const program = window.PROGRAMS[index % window.PROGRAMS.length];
-  const openResponse = DEMO_OPEN_RESPONSES[index % DEMO_OPEN_RESPONSES.length];
-  const response = {
-    id: 'DEMO-' + String(index + 1).padStart(3, '0'),
-    ts: `${String((index % 27) + 1).padStart(2, '0')}/04/2026`,
-    email: `P-demo-${String(index + 1).padStart(3, '0')}`,
-    year: String(window.PROGRAM_YEARS[program]),
-    program,
-    cohort: ['Năm 1', 'Năm 2', 'Năm 3', 'Năm 4 trở lên'][index % 4],
-    faculty: ['Nhóm ngành A', 'Nhóm ngành B', 'Nhóm ngành C', 'Nhóm ngành D'][index % 4],
-    gender: index % 2 ? 'Nữ' : 'Nam',
-    overall: 4 + (index % 4),
-    learn: openResponse.learn,
-    trouble: openResponse.trouble,
-    interest: openResponse.interest,
-    feedback: openResponse.feedback
-  };
-  let itemIndex = 0;
-  for (const factor of window.FACTORS) {
-    for (const item of factor.items) {
-      response[item.code] = 4 + ((index + itemIndex) % 4);
-      itemIndex++;
-    }
-  }
-  // Tạo chênh lệch có chủ đích để minh họa luồng Likert → phản hồi mở → hành động.
-  response.DVTT1 = 3 + (index % 2);
-  response.CSVC2 = 2 + (index % 3);
-  response.CLCT5 = 3 + (index % 3);
-  response.CLCT1 = 4 + (index % 2);
-  response.GTCT1 = 6 + (index % 2);
-  response.SHL1 = 5 + (index % 3);
-  return response;
-});
+window.PROGRAMS      = [];
+window.PROGRAM_YEARS = {};
+window.PROGRAM_INFO  = {};
+window.PARTICIPANT_MAP = {};
 
 // ----------------- Aggregation helpers -----------------
 

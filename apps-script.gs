@@ -2,12 +2,12 @@
 //  Anonymous Survey System — Google Apps Script
 // ═══════════════════════════════════════════════════════════════════
 
-const SPREADSHEET_ID    = PropertiesService.getScriptProperties().getProperty('ANONYMIZED_SPREADSHEET_ID');
-const SHEET_ASSIGNMENTS = 'Activities';
-const SHEET_RESPONSES   = 'SurveyResponses';
-const SHEET_MAILBOX     = 'ListeningMailbox';
-const SHEET_SPECIAL     = 'SpecialSurveyResponses';
-const SPECIAL_SURVEY_NAME = 'Khảo sát nhu cầu, sở thích và các yếu tố ảnh hưởng đến ý định tham gia hoạt động của người học.';
+const SPREADSHEET_ID    = PropertiesService.getScriptProperties().getProperty('CONTEST_SPREADSHEET_ID');
+const SHEET_ASSIGNMENTS = 'Assignments';
+const SHEET_RESPONSES   = 'Responses';
+const SHEET_MAILBOX     = 'Mailbox';
+const SHEET_SPECIAL     = 'CELG_Responses';
+const SPECIAL_SURVEY_NAME = 'Khảo sát nhu cầu, sở thích và các yếu tố ảnh hưởng đến ý định tham gia hoạt động/sự kiện của sinh viên UEH.';
 
 // Cấu trúc sheet "Activities" (admin quản lý):
 // A: courseName      — tên chương trình
@@ -23,14 +23,15 @@ const SPECIAL_SURVEY_NAME = 'Khảo sát nhu cầu, sở thích và các yếu t
 // K: ketThucKhaoSat  — kết thúc khảo sát (yyyy-mm-dd)
 
 // Cấu trúc sheet "SurveyResponses" (tự động tạo nếu chưa có):
-// timestamp | anonymousId | year | program | reserved fields | cohort | group | gender |
+// timestamp | email | year | program | họ tên | tên | MSSV | lớp | khóa | khoa | giới tính |
+// số điện thoại | email UEH | email khác | Facebook |
 // DVTT1-4 | CLCT1-5 | CSVC1-3 | GTCT1-2 | SHL1-3 | LTT1-4 |
 // overall | learn | trouble | interest | feedback
 
 
 // ── Web App entry point ──────────────────────────────────────────
 function doGet(e) {
-  if (!SPREADSHEET_ID) return jsonOut({ success: false, error: 'Chưa cấu hình ANONYMIZED_SPREADSHEET_ID cho bản dự thi.' });
+  if (!SPREADSHEET_ID) return jsonOut({ success: false, error: 'Chưa cấu hình CONTEST_SPREADSHEET_ID cho bản dự thi.' });
   const action = e.parameter.action;
   if (action === 'getCourses')    return handleGetCourses(e.parameter.email);
   if (action === 'submitSurvey')  return handleSubmitSurvey(e.parameter);
@@ -140,9 +141,9 @@ function handleSubmitSurvey(p) {
       if (!celgSheet) {
         celgSheet = ss.insertSheet(SHEET_SPECIAL);
         celgSheet.appendRow([
-          'Dấu thời gian','Mã ẩn danh','Năm','Chương trình',
-          'Trường dự phòng 1','Trường dự phòng 2','Trường dự phòng 3','Trường dự phòng 4','Nhóm năm học','Nhóm ngành',
-          'Giới tính','Trường dự phòng 5','Trường dự phòng 6','Trường dự phòng 7','Trường dự phòng 8',
+          'Dấu thời gian','Email','Năm','Chương trình',
+          'Họ và tên đệm','Tên','MSSV','Lớp','Khóa','Khoa',
+          'Giới tính','Số điện thoại','Email UEH','Email khác','Link Facebook',
           'Số HĐ tham gia', 'Quan tâm HĐ', 'Ưu tiên HĐ', 'Hình thức HĐ',
           'C.1', 'C.2', 'C.3', 'C.4', 'C.5', 'C.6', 'C.7',
           'D.1', 'D.2', 'D.3', 'D.4', 'D.5',
@@ -153,8 +154,8 @@ function handleSubmitSurvey(p) {
       }
       celgSheet.appendRow([
         new Date(), p.email||'', p.year||'', p.program||'',
-        '', '', '', '', p.cohort||'', p.faculty||'',
-        p.gender||'', '', '', '', '',
+        p.lastName||'', p.firstName||'', p.studentId||'', p.studentClass||'', p.cohort||'', p.faculty||'',
+        p.gender||'', p.phone||'', p.emailUeh||'', p.emailOther||'', p.facebook||'',
         p.Q_A8||'', p.Q_B1||'', p.Q_B2||'', p.Q_B3||'',
         num(p.C_1), num(p.C_2), num(p.C_3), num(p.C_4), num(p.C_5), num(p.C_6), num(p.C_7),
         p.D_1||'', p.D_2||'', p.D_3||'', p.D_4||'', p.D_5||'',
@@ -196,9 +197,9 @@ function handleSubmitSurvey(p) {
     if (!respSheet) {
       respSheet = ss.insertSheet(SHEET_RESPONSES);
       respSheet.appendRow([
-        'Dấu thời gian','Mã ẩn danh','Năm','Chương trình',
-        'Trường dự phòng 1','Trường dự phòng 2','Trường dự phòng 3','Trường dự phòng 4','Nhóm năm học','Nhóm ngành',
-        'Giới tính','Trường dự phòng 5','Trường dự phòng 6','Trường dự phòng 7','Trường dự phòng 8',
+        'Dấu thời gian','Email','Năm','Chương trình',
+        'Họ và tên đệm','Tên','MSSV','Lớp','Khóa','Khoa',
+        'Giới tính','Số điện thoại','Email UEH','Email khác','Link Facebook',
         'DVTT1','DVTT2','DVTT3','DVTT4',
         'CLCT1','CLCT2','CLCT3','CLCT4','CLCT5',
         'CSVC1','CSVC2','CSVC3','GTCT1','GTCT2',
@@ -218,8 +219,8 @@ function handleSubmitSurvey(p) {
     }
     respSheet.appendRow([
       new Date(), p.email||'', p.year||'', p.program||'',
-      '', '', '', '', p.cohort||'', p.faculty||'',
-      p.gender||'', '', '', '', '',
+      p.lastName||'', p.firstName||'', p.studentId||'', p.studentClass||'', p.cohort||'', p.faculty||'',
+      p.gender||'', p.phone||'', p.emailUeh||'', p.emailOther||'', p.facebook||'',
       num(p.DVTT1),num(p.DVTT2),num(p.DVTT3),num(p.DVTT4),
       num(p.CLCT1),num(p.CLCT2),num(p.CLCT3),num(p.CLCT4),num(p.CLCT5),
       num(p.CSVC1),num(p.CSVC2),num(p.CSVC3),
@@ -251,9 +252,10 @@ function handleGetResponses() {
       id: 'R'+String(i).padStart(3,'0'), ts: fmtDate(r[0]),
       email: String(r[1]||''), year: String(r[2]||''),
       program: String(r[3]||''), 
-      lastName: '', firstName: '', studentId: '', studentClass: '',
-      cohort: String(r[8]||''), faculty: String(r[9]||''), gender: String(r[10]||''),
-      phone: '', institutionalEmail: '', emailOther: '', facebook: '',
+      lastName: String(r[4]||''), firstName: String(r[5]||''), studentId: String(r[6]||''),
+      studentClass: String(r[7]||''), cohort: String(r[8]||''), faculty: String(r[9]||''),
+      gender: String(r[10]||''), phone: String(r[11]||''), emailUeh: String(r[12]||''),
+      emailOther: String(r[13]||''), facebook: String(r[14]||''),
       DVTT1:num(r[15]),DVTT2:num(r[16]),DVTT3:num(r[17]),DVTT4:num(r[18]),
       CLCT1:num(r[19]),CLCT2:num(r[20]),CLCT3:num(r[21]),CLCT4:num(r[22]),CLCT5:num(r[23]),
       CSVC1:num(r[24]),CSVC2:num(r[25]),CSVC3:num(r[26]),
@@ -311,9 +313,9 @@ function handleSubmitMailbox(p) {
     let sheet = ss.getSheetByName(SHEET_MAILBOX);
     if (!sheet) {
       sheet = ss.insertSheet(SHEET_MAILBOX);
-      sheet.appendRow(['Dấu thời gian', 'Mã ẩn danh', 'Nội dung']);
+      sheet.appendRow(['Dấu thời gian', 'Email', 'Nội dung']);
     }
-    sheet.appendRow([new Date(), String(p.email || '(ẩn danh)'), String(p.content || '')]);
+    sheet.appendRow([new Date(), String(p.email || ''), String(p.content || '')]);
     return jsonOut({ success: true });
   } catch (err) {
     return jsonOut({ success: false, error: err.message });
