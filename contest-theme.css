@@ -259,7 +259,7 @@ body {
 
 #loginSection { width: 100%; align-items: stretch; }
 #loginSection .contest-hero {
-  min-height: calc(100vh - 78px);
+  min-height: calc(100vh - 94px);
   padding: 0;
   display: flex;
   background: #fff;
@@ -374,7 +374,7 @@ body {
 }
 .contest-footer.site-footer::before {
   width: 100%;
-  height: 6px;
+  height: 22px;
   flex-shrink: 0;
   background: linear-gradient(90deg,
     #0f6c56 0 20%, #e8670a 20% 40%, #f5a623 40% 60%,
