@@ -634,12 +634,18 @@ body {
 .nexus-heading { align-items: flex-end; }
 .nexus-program-filter { min-width: 260px; display: flex; flex-direction: column; gap: 7px; color: #64748b; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .45px; }
 .nexus-program-filter select { min-height: 42px; padding: 9px 36px 9px 12px; border: 1px solid var(--contest-line); border-radius: 9px; color: var(--contest-navy); background: #fff; font: inherit; font-size: 12px; text-transform: none; letter-spacing: 0; }
+.nexus-filter-row { display: flex; align-items: flex-end; gap: 10px; }
+.nexus-filter-row .nexus-program-filter:first-child { width: 360px; }
+.nexus-filter-row .nexus-program-filter:last-child { width: 240px; min-width: 220px; }
+.nexus-filter-row select { width: 100%; }
+.nexus-method-note { margin: -6px 0 12px; padding: 11px 14px; border-left: 4px solid var(--contest-blue); border-radius: 7px; color: #526175; background: #eef5fb; font-size: 10px; line-height: 1.55; }
 .nexus-flow { margin: -6px 0 22px; padding: 12px 16px; display: flex; align-items: center; justify-content: center; gap: 12px; border: 1px solid #d8e5e4; border-radius: 10px; color: #536174; background: #f8fbfb; font-size: 12px; font-weight: 700; }
 .nexus-flow span { padding: 6px 11px; border-radius: 999px; color: #075f5a; background: #e7f5f3; }
 .nexus-flow b { color: var(--contest-orange); font-size: 17px; }
 .nexus-layout { display: grid; grid-template-columns: minmax(280px, .75fr) minmax(0, 2fr); gap: 20px; align-items: start; }
 .nexus-priority-list, .nexus-joint-card, .nexus-action-card { border: 1px solid var(--contest-line); border-radius: 13px; background: #fff; box-shadow: 0 7px 22px rgba(16,38,74,.055); }
 .nexus-priority-list { position: sticky; top: 96px; padding: 16px; }
+.nexus-priority-scroll { max-height: 720px; padding-right: 4px; overflow-y: auto; }
 .nexus-panel-title { margin-bottom: 13px; color: var(--contest-navy); font-size: 14px; font-weight: 800; }
 .nexus-priority-item { width: 100%; margin-top: 9px; padding: 13px 12px; display: grid; grid-template-columns: 32px 1fr; gap: 3px 9px; border: 1px solid var(--contest-line); border-radius: 10px; color: #334155; background: #fff; text-align: left; transition: .15s ease; }
 .nexus-priority-item:hover, .nexus-priority-item.is-active { border-color: #70aaa5; background: #f0f8f7; transform: translateY(-1px); }
@@ -674,7 +680,18 @@ body {
 .nexus-open-evidence { max-height: 310px; overflow-y: auto; }
 .nexus-open-evidence blockquote { margin: 0 0 8px; padding: 10px 11px; border-left: 3px solid var(--contest-yellow); border-radius: 0 7px 7px 0; color: #475569; background: #fff; font-size: 10px; line-height: 1.55; }
 .nexus-open-evidence blockquote span { display: block; margin-bottom: 3px; color: #08756f; font-size: 8px; font-weight: 800; text-transform: uppercase; }
+.nexus-open-evidence blockquote .nexus-sentiment { font-style: normal; }
+.nexus-sentiment--negative { color: #b13b2d; }
+.nexus-sentiment--positive { color: #087052; }
+.nexus-sentiment--neutral { color: #65758b; }
 .nexus-empty { padding: 20px; color: #8290a2; text-align: center; }
+.nexus-relation { margin-top: 16px; padding: 12px 15px; display: flex; flex-direction: column; gap: 4px; border-radius: 7px; color: #334155; background: #f3f6f9; }
+.nexus-relation span { font-size: 9px; font-weight: 800; letter-spacing: .55px; }
+.nexus-relation strong { font-size: 11px; line-height: 1.5; }
+.nexus-relation--urgent { border-left: 5px solid #d84a32; background: #fff1ed; }
+.nexus-relation--inspect { border-left: 5px solid #e4a11b; background: #fff8e7; }
+.nexus-relation--watch { border-left: 5px solid #367bb7; background: #eef6fd; }
+.nexus-relation--maintain { border-left: 5px solid #16806e; background: #eef9f6; }
 .nexus-diagnosis { margin-top: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 5px; border-left: 5px solid var(--contest-orange); border-radius: 7px; color: var(--contest-navy); background: #fff7ef; }
 .nexus-diagnosis span { color: #b94709; font-size: 9px; font-weight: 800; letter-spacing: .65px; }
 .nexus-diagnosis strong { font-size: 12px; line-height: 1.55; }
@@ -704,6 +721,9 @@ body {
 
 @media (max-width: 700px) {
   .nexus-heading { align-items: stretch; flex-direction: column; }
+  .nexus-filter-row { align-items: stretch; flex-direction: column; }
+  .nexus-filter-row .nexus-program-filter:first-child,
+  .nexus-filter-row .nexus-program-filter:last-child { width: 100%; }
   .nexus-program-filter { min-width: 0; }
   .nexus-flow { justify-content: flex-start; overflow-x: auto; }
   .nexus-flow span { white-space: nowrap; }

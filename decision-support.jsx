@@ -1,157 +1,259 @@
-/* decision-support.jsx — Joint Display + action knowledge base for NEXUS */
+/* decision-support.jsx — NEXUS analysis built from live Likert and open-response data. */
 
-const NEXUS_ACTION_KNOWLEDGE = [
-  {
-    code: 'DVTT1', importance: 0.92,
-    issue: 'Thông tin trước chương trình chưa kịp thời',
-    keywords: ['thong bao', 'thong tin', 'dia diem', 'lich', 'tre'],
-    diagnosis: 'Thông tin quan trọng đang được gửi muộn hoặc chưa đồng nhất giữa các kênh.',
-    actions: [
-      'Chốt và gửi thông báo chính thức tối thiểu 5 ngày trước chương trình.',
-      'Dùng mẫu thông báo bắt buộc có thời gian, địa điểm, đối tượng và người liên hệ.',
-      'Gửi một bản nhắc lại trước 24 giờ và cập nhật đồng thời trên mọi kênh.'
-    ],
-    metric: 'Tỷ lệ thông báo đúng hạn và điểm DVTT1 ở chương trình tiếp theo',
-    target: 'DVTT1 ≥ 5,0/7; ít nhất 90% thông báo đúng hạn'
-  },
-  {
-    code: 'CSVC2', importance: 0.86,
-    issue: 'Âm thanh và thiết bị chưa ổn định',
-    keywords: ['am thanh', 'micro', 'thiet bi', 'loa', 'anh sang'],
-    diagnosis: 'Khâu kiểm tra kỹ thuật trước chương trình chưa đủ để phát hiện lỗi tại vị trí người tham dự.',
-    actions: [
-      'Thực hiện checklist âm thanh, ánh sáng và trình chiếu trước ít nhất 30 phút.',
-      'Thử micro tại đầu, giữa và cuối phòng thay vì chỉ kiểm tra trên sân khấu.',
-      'Chuẩn bị micro, pin và cáp kết nối dự phòng; chỉ định một người trực kỹ thuật.'
-    ],
-    metric: 'Số sự cố kỹ thuật và điểm CSVC2 ở chương trình tiếp theo',
-    target: 'CSVC2 ≥ 5,0/7; không quá 1 sự cố kỹ thuật'
-  },
-  {
-    code: 'CLCT5', importance: 0.79,
-    issue: 'Tiến độ chương trình chưa đúng kế hoạch',
-    keywords: ['thoi gian', 'keo dai', 'cham', 'lich trinh', 'linh hoat'],
-    diagnosis: 'Thời lượng từng phần và khoảng dự phòng chưa được kiểm soát rõ trong kịch bản vận hành.',
-    actions: [
-      'Gắn thời lượng và người chịu trách nhiệm cho từng phần trong rundown.',
-      'Bố trí 10–15 phút dự phòng và quy định tín hiệu nhắc thời gian cho điều phối viên.',
-      'Ghi nhận thời gian thực tế sau chương trình để điều chỉnh rundown lần sau.'
-    ],
-    metric: 'Độ lệch thời gian kết thúc và điểm CLCT5',
-    target: 'Kết thúc lệch không quá 10 phút; CLCT5 ≥ 5,2/7'
-  },
-  {
-    code: 'CLCT1', importance: 0.72,
-    issue: 'Hỗ trợ người tham dự chưa nhất quán',
-    keywords: ['ho tro', 'giai dap', 'check-in', 'xep hang', 'cho lau'],
-    diagnosis: 'Điểm tiếp nhận và nhân sự hỗ trợ chưa có hướng dẫn xử lý thống nhất khi lượng người tăng.',
-    actions: [
-      'Tách luồng check-in và hỗ trợ thắc mắc thành hai vị trí.',
-      'Chuẩn bị bộ câu trả lời nhanh cho các câu hỏi thường gặp.',
-      'Bổ sung nhân sự hỗ trợ trong 20 phút cao điểm đầu chương trình.'
-    ],
-    metric: 'Thời gian chờ trung bình và điểm CLCT1',
-    target: 'Thời gian chờ dưới 5 phút; CLCT1 ≥ 5,2/7'
-  }
-];
-
-const OPEN_FIELD_LABELS = {
-  learn: 'Giá trị nhận được',
-  trouble: 'Khó khăn gặp phải',
-  interest: 'Nhu cầu sinh viên',
-  feedback: 'Góp ý cải thiện'
+const NEXUS_OPEN_FIELDS = {
+  learn: 'Giá trị nhận được', trouble: 'Khó khăn gặp phải',
+  interest: 'Nhu cầu sắp tới', feedback: 'Góp ý cải thiện'
 };
+
+const NEXUS_FACTOR_KNOWLEDGE = {
+  DVTT: {
+    diagnosis: 'Quy trình truyền thông và cung cấp thông tin chưa tạo được trải nghiệm nhất quán trước khi người học tham gia.',
+    actions: [
+      'Chuẩn hóa mẫu thông báo bắt buộc có thời gian, địa điểm, đối tượng, cách đăng ký và đầu mối hỗ trợ.',
+      'Chốt lịch truyền thông theo các mốc T-7, T-3 và T-1; cập nhật thay đổi đồng thời trên các kênh.',
+      'Kiểm tra nhanh thông điệp với một nhóm sinh viên trước khi phát hành và ghi nhận tỷ lệ tiếp cận.'
+    ]
+  },
+  CLCT: {
+    diagnosis: 'Nội dung, cách tổ chức hoặc điều phối chương trình chưa đáp ứng đồng đều kỳ vọng của người tham dự.',
+    actions: [
+      'Chuyển mục tiêu chương trình thành checklist nội dung, người phụ trách và tiêu chí nghiệm thu rõ ràng.',
+      'Chạy thử kịch bản, phân vai hỗ trợ và bố trí 10–15 phút dự phòng trước khi chương trình diễn ra.',
+      'Họp rút kinh nghiệm trong 48 giờ, chọn một nguyên nhân gốc và giao người chịu trách nhiệm xử lý.'
+    ]
+  },
+  CSVC: {
+    diagnosis: 'Điều kiện không gian hoặc thiết bị chưa được kiểm tra đầy đủ theo trải nghiệm thực tế của người tham dự.',
+    actions: [
+      'Khảo sát địa điểm theo quy mô đăng ký và kiểm tra trải nghiệm tại đầu, giữa và cuối khu vực tổ chức.',
+      'Dùng checklist âm thanh, ánh sáng, trình chiếu, chỗ ngồi và lối di chuyển trước ít nhất 30 phút.',
+      'Chuẩn bị phương án dự phòng cho thiết bị quan trọng và chỉ định một đầu mối xử lý sự cố tại chỗ.'
+    ]
+  },
+  GTCT: {
+    diagnosis: 'Giá trị người tham dự nhận được chưa tương xứng hoàn toàn với thời gian và kỳ vọng ban đầu.',
+    actions: [
+      'Công bố rõ kết quả người tham dự sẽ nhận được và loại bỏ phần không phục vụ trực tiếp mục tiêu đó.',
+      'Tăng phần thực hành, tình huống thật hoặc sản phẩm đầu ra có thể áp dụng sau chương trình.',
+      'Đo kỳ vọng trước và giá trị nhận được sau chương trình để xác định khoảng cách cần xử lý.'
+    ]
+  },
+  SHL: {
+    diagnosis: 'Trải nghiệm tổng thể còn điểm nghẽn, làm giảm cảm xúc tích cực và mức độ hài lòng của người tham dự.',
+    actions: [
+      'Tổng hợp ba điểm chạm có ảnh hưởng lớn nhất và ưu tiên xử lý điểm chạm có nhiều bằng chứng nhất.',
+      'Giao một chủ sở hữu, thời hạn và chỉ số kết quả cho từng hành động cải thiện được chọn.',
+      'Thực hiện pulse survey ngắn sau lần tổ chức tiếp theo để kiểm tra mức thay đổi.'
+    ]
+  },
+  LTT: {
+    diagnosis: 'Ý định quay lại, giới thiệu hoặc tiếp tục đóng góp phản hồi chưa được củng cố sau chương trình.',
+    actions: [
+      'Gửi nội dung follow-up, tài liệu và kết quả chương trình trong vòng 48 giờ.',
+      'Tạo lộ trình hoạt động tiếp theo phù hợp nhu cầu đã ghi nhận và mời đúng nhóm sinh viên quan tâm.',
+      'Thông báo những thay đổi được thực hiện từ góp ý để người tham dự thấy phản hồi của họ có giá trị.'
+    ]
+  }
+};
+
+const NEXUS_ITEM_TOPICS = {
+  DVTT1: { topic: 'Thông tin kịp thời', keywords: ['thong bao','thong tin','email','fanpage','tre','muon','kip thoi','lich'] },
+  DVTT2: { topic: 'Địa điểm và chỉ dẫn', keywords: ['dia diem','phong','duong','ban do','tim','vi tri'] },
+  DVTT3: { topic: 'Thông tin đăng ký', keywords: ['truyen thong','dang ky','huong dan','ro rang','the le'] },
+  DVTT4: { topic: 'Ấn phẩm truyền thông', keywords: ['poster','an pham','hinh anh','thiet ke','thu hut'] },
+  CLCT1: { topic: 'Hỗ trợ và giải đáp', keywords: ['ho tro','giai dap','nhan su','check-in','check in','xep hang','cho lau'] },
+  CLCT2: { topic: 'Hình thức hoạt động', keywords: ['da dang','hinh thuc','workshop','tro choi','tuong tac'] },
+  CLCT3: { topic: 'Chiều sâu nội dung', keywords: ['noi dung','kien thuc','tim hieu','chuyen sau','hoc hoi'] },
+  CLCT4: { topic: 'Mức độ phù hợp', keywords: ['muc tieu','chu de','phu hop','lan man','dung nhu'] },
+  CLCT5: { topic: 'Bố cục và thời gian', keywords: ['thoi gian','keo dai','cham','lich trinh','bo cuc','rundown'] },
+  CSVC1: { topic: 'Không gian tổ chức', keywords: ['khong gian','quy mo','phong','chat choi','dia diem'] },
+  CSVC2: { topic: 'Thiết bị kỹ thuật', keywords: ['am thanh','anh sang','micro','loa','may chieu','thiet bi'] },
+  CSVC3: { topic: 'Sự thoải mái', keywords: ['cho ngoi','ghe','nong','lanh','dieu hoa','thoai mai'] },
+  GTCT1: { topic: 'Giá trị thực tế', keywords: ['gia tri','huu ich','thiet thuc','ap dung','xung dang'] },
+  GTCT2: { topic: 'Kỳ vọng', keywords: ['ky vong','mong doi','vuot','that vong'] },
+  SHL1: { topic: 'Hài lòng tổng thể', keywords: ['hai long','trai nghiem','tong the'] },
+  SHL2: { topic: 'Cảm xúc tham gia', keywords: ['cam xuc','vui','thich','tich cuc','chan'] },
+  SHL3: { topic: 'Lựa chọn tham gia', keywords: ['lua chon','quyet dinh','xung dang','tiec'] },
+  LTT1: { topic: 'Chia sẻ tích cực', keywords: ['chia se','tich cuc','noi tot','truyen mieng'] },
+  LTT2: { topic: 'Ý định quay lại', keywords: ['tiep tuc','lan sau','dang ky','quay lai'] },
+  LTT3: { topic: 'Ý định giới thiệu', keywords: ['gioi thieu','ban be','nguoi quen'] },
+  LTT4: { topic: 'Đóng góp phản hồi', keywords: ['phan hoi','gop y','cai thien','lang nghe'] }
+};
+
+const NEXUS_NEGATIVE_WORDS = ['khong tot','chua tot','khong hai long','khong ro rang','khong kip thoi','khong phu hop','kem','te hai','tre','qua lau','cho lau','kho khan','bat tien','that vong','bi loi','hong','on ao','qua nong','chat choi','thieu','lan man','qua dai','met moi','nham chan'];
+const NEXUS_POSITIVE_WORDS = ['tot','hay','huu ich','hai long','thich','tich cuc','ro rang','kip thoi','thoai mai','an tuong','xung dang','tuyet voi'];
 
 function nexusNormalize(value) {
   return String(value || '').toLowerCase().normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
 }
 
-function nexusItemMeta(code) {
-  for (const factor of window.FACTORS || []) {
-    const item = factor.items.find(entry => entry.code === code);
-    if (item) return { factor: factor.name, label: item.label };
-  }
-  return { factor: 'Khác', label: code };
+function nexusNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 1 && number <= 7 ? number : null;
 }
 
-function nexusClassification(importance, performance) {
-  if (importance >= 0.75 && performance < 4.5) return { label: 'Ưu tiên cải thiện', tone: 'urgent' };
-  if (importance >= 0.75 && performance >= 5) return { label: 'Duy trì', tone: 'maintain' };
-  if (importance < 0.75 && performance < 4.5) return { label: 'Cần xem sâu', tone: 'inspect' };
+function nexusMean(values) {
+  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+}
+
+function nexusMedian(values) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+function nexusCorrelation(pairs) {
+  if (pairs.length < 5) return 0;
+  const meanX = nexusMean(pairs.map(pair => pair.x));
+  const meanY = nexusMean(pairs.map(pair => pair.y));
+  let numerator = 0, denominatorX = 0, denominatorY = 0;
+  pairs.forEach(pair => {
+    const dx = pair.x - meanX, dy = pair.y - meanY;
+    numerator += dx * dy; denominatorX += dx * dx; denominatorY += dy * dy;
+  });
+  const denominator = Math.sqrt(denominatorX * denominatorY);
+  return denominator ? numerator / denominator : 0;
+}
+
+function nexusOutcome(response, itemCode) {
+  const overall = nexusNumber(response.overall);
+  if (overall !== null) return overall;
+  const satisfaction = ['SHL1','SHL2','SHL3']
+    .filter(code => code !== itemCode).map(code => nexusNumber(response[code]))
+    .filter(value => value !== null);
+  return satisfaction.length ? nexusMean(satisfaction) : null;
+}
+
+function nexusSentiment(text, field) {
+  const normalized = nexusNormalize(text);
+  const noProblem = /(khong|chua) (gap|co) (kho khan|van de|bat tien)|khong co gi/.test(normalized);
+  if (noProblem) return 'Tích cực';
+  const negative = NEXUS_NEGATIVE_WORDS.filter(word => normalized.includes(word)).length;
+  const positive = NEXUS_POSITIVE_WORDS.filter(word => normalized.includes(word)).length;
+  if (negative > positive) return 'Tiêu cực';
+  if (positive > negative) return 'Tích cực';
+  if (field === 'trouble') return 'Tiêu cực';
+  if (field === 'learn') return 'Tích cực';
+  return 'Trung lập';
+}
+
+function nexusItemMeta() {
+  const items = [];
+  (window.FACTORS || []).forEach(factor => factor.items.forEach(item => items.push({
+    code: item.code, label: item.label, factorCode: factor.code, factor: factor.name,
+    ...(NEXUS_ITEM_TOPICS[item.code] || { topic: factor.name, keywords: [] })
+  })));
+  return items;
+}
+
+function nexusOpenEvidence(responses, item) {
+  const evidence = [];
+  responses.forEach((response, responseIndex) => Object.keys(NEXUS_OPEN_FIELDS).forEach(field => {
+    const text = String(response[field] || '').trim();
+    const normalized = nexusNormalize(text);
+    if (!text || ['khong','khong co','khong co.','khong gap'].includes(normalized)) return;
+    if (item.keywords.some(keyword => normalized.includes(keyword))) {
+      evidence.push({
+        source: NEXUS_OPEN_FIELDS[field], text, sentiment: nexusSentiment(text, field),
+        responseId: response.id || `R${responseIndex + 1}`, rating: nexusNumber(response[item.code])
+      });
+    }
+  }));
+  return evidence;
+}
+
+function nexusRelationship(performance, performanceMedian, evidence, lowRespondents) {
+  const negative = evidence.filter(entry => entry.sentiment === 'Tiêu cực');
+  const convergent = new Set(negative.filter(entry => entry.rating !== null && entry.rating <= 4).map(entry => entry.responseId));
+  const divergent = new Set(negative.filter(entry => entry.rating !== null && entry.rating >= 5).map(entry => entry.responseId));
+  const evidenceRespondents = new Set(evidence.map(entry => entry.responseId));
+  if (convergent.size >= 2 && convergent.size >= divergent.size) return { label: 'Hội tụ', tone: 'urgent', detail: `${convergent.size} người vừa chấm thấp vừa nêu phản hồi tiêu cực cùng chủ đề.` };
+  if (divergent.size >= 2 && divergent.size > convergent.size) return { label: 'Phân kỳ', tone: 'inspect', detail: `${divergent.size} người chấm từ 5 điểm nhưng vẫn nêu vấn đề; cần xem trải nghiệm theo từng điểm chạm.` };
+  if (performance < performanceMedian && evidenceRespondents.size < 2) return { label: 'Thiếu bằng chứng', tone: 'watch', detail: `${lowRespondents} lượt chấm thấp nhưng chưa có đủ phản hồi mở khớp trực tiếp.` };
+  return { label: 'Bổ sung', tone: 'maintain', detail: 'Phản hồi mở bổ sung ngữ cảnh cho kết quả Likert nhưng chưa tạo mâu thuẫn hoặc hội tụ mạnh.' };
+}
+
+function nexusClassification(importance, performance, importanceMedian, performanceMedian) {
+  const highImportance = importance >= importanceMedian;
+  const highPerformance = performance >= performanceMedian;
+  if (highImportance && !highPerformance) return { label: 'Ưu tiên cải thiện', tone: 'urgent' };
+  if (highImportance && highPerformance) return { label: 'Duy trì', tone: 'maintain' };
+  if (!highImportance && !highPerformance) return { label: 'Cần xem sâu', tone: 'inspect' };
   return { label: 'Theo dõi', tone: 'watch' };
 }
 
 function buildNexusInsights(responses) {
   if (!responses.length) return [];
-  return NEXUS_ACTION_KNOWLEDGE.map(rule => {
-    const meta = nexusItemMeta(rule.code);
-    const values = responses.map(r => Number(r[rule.code])).filter(Number.isFinite);
-    const performance = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
-    const positive = values.length ? Math.round(values.filter(value => value >= 5).length / values.length * 100) : 0;
-    const distribution = [1,2,3,4,5,6,7].map(score => values.filter(value => value === score).length);
-    const evidence = [];
-
-    responses.forEach(response => {
-      Object.keys(OPEN_FIELD_LABELS).forEach(field => {
-        const text = String(response[field] || '').trim();
-        const normalized = nexusNormalize(text);
-        if (!text || normalized === 'khong co.' || normalized === 'khong co') return;
-        if (rule.keywords.some(keyword => normalized.includes(keyword))) {
-          evidence.push({ source: OPEN_FIELD_LABELS[field], text, responseId: response.id });
-        }
-      });
-    });
-
-    const classification = nexusClassification(rule.importance, performance);
-    const priorityScore = Math.round(Math.min(100,
-      rule.importance * Math.max(0, 7 - performance) / 6 * 100 + Math.min(12, evidence.length) * 1.2
-    ));
-
-    return { ...rule, ...meta, performance, positive, distribution, evidence, classification, priorityScore };
+  const preliminaries = nexusItemMeta().map(item => {
+    const scored = responses.map(response => ({ response, value: nexusNumber(response[item.code]) })).filter(entry => entry.value !== null);
+    if (!scored.length) return null;
+    const values = scored.map(entry => entry.value);
+    const pairs = scored.map(entry => ({ x: entry.value, y: nexusOutcome(entry.response, item.code) })).filter(pair => pair.y !== null);
+    const evidence = nexusOpenEvidence(responses, item);
+    const negativeEvidence = evidence.filter(entry => entry.sentiment === 'Tiêu cực');
+    const performance = nexusMean(values);
+    return {
+      ...item, n: values.length, performance,
+      positive: Math.round(values.filter(value => value >= 5).length / values.length * 100),
+      lowRate: Math.round(values.filter(value => value <= 4).length / values.length * 100),
+      lowRespondents: values.filter(value => value <= 4).length,
+      distribution: [1,2,3,4,5,6,7].map(score => values.filter(value => value === score).length),
+      rawImportance: Math.max(0, nexusCorrelation(pairs)), evidence, negativeEvidence,
+      negativePercent: evidence.length ? Math.round(negativeEvidence.length / evidence.length * 100) : 0
+    };
+  }).filter(Boolean);
+  if (!preliminaries.length) return [];
+  const maxImportance = Math.max(...preliminaries.map(item => item.rawImportance), 0.01);
+  preliminaries.forEach(item => { item.importance = item.rawImportance / maxImportance; });
+  const importanceMedian = nexusMedian(preliminaries.map(item => item.importance));
+  const performanceMedian = nexusMedian(preliminaries.map(item => item.performance));
+  return preliminaries.map(item => {
+    const classification = nexusClassification(item.importance, item.performance, importanceMedian, performanceMedian);
+    const relationship = nexusRelationship(item.performance, performanceMedian, item.evidence, item.lowRespondents);
+    const performanceGap = Math.max(0, 7 - item.performance) / 6;
+    const evidenceWeight = Math.min(1, item.negativeEvidence.length / Math.max(3, item.n * 0.15));
+    const priorityScore = Math.round(Math.min(100, (item.importance * 0.55 + performanceGap * 0.35 + evidenceWeight * 0.1) * 100));
+    const knowledge = NEXUS_FACTOR_KNOWLEDGE[item.factorCode];
+    return {
+      ...item, classification, relationship, priorityScore,
+      issue: `${item.topic}: ${item.label}`,
+      diagnosis: `${knowledge.diagnosis} ${relationship.detail}`,
+      actions: knowledge.actions,
+      metric: `Điểm ${item.code}, tỷ lệ chấm 1–4 và số phản hồi tiêu cực cùng chủ đề`,
+      target: `${item.code} ≥ ${Math.min(6.5, Math.max(5, item.performance + 0.4)).toFixed(1)}/7 và tỷ lệ chấm 1–4 giảm ít nhất 20%`
+    };
   }).sort((a, b) => b.priorityScore - a.priorityScore);
 }
 
 function MiniLikertDistribution({ values }) {
   const total = values.reduce((sum, value) => sum + value, 0) || 1;
   const colors = ['#c2413a','#df6548','#e99b3a','#a8b1bd','#64a8c8','#2e9a78','#08756f'];
-  return (
-    <div>
-      <div className="nexus-likert-bar">
-        {values.map((value, index) => value > 0 && (
-          <span key={index} style={{ width: `${value / total * 100}%`, background: colors[index] }} title={`Điểm ${index + 1}: ${value} phiếu`} />
-        ))}
-      </div>
-      <div className="nexus-likert-labels"><span>1 — Không đồng ý</span><span>7 — Đồng ý</span></div>
-    </div>
-  );
+  return <div><div className="nexus-likert-bar">{values.map((value, index) => value > 0 && <span key={index} style={{ width: `${value / total * 100}%`, background: colors[index] }} title={`Điểm ${index + 1}: ${value} phiếu`} />)}</div><div className="nexus-likert-labels"><span>1 — Hoàn toàn không đồng ý</span><span>7 — Hoàn toàn đồng ý</span></div></div>;
 }
 
-function DecisionSupport({ onBack }) {
-  const programs = window.PROGRAMS || [];
+function DecisionSupport({ onBack, dataVersion = 0 }) {
+  const programs = window.PROGRAMS || [], factors = window.FACTORS || [];
   const [program, setProgram] = React.useState('__ALL__');
+  const [factorCode, setFactorCode] = React.useState('__ALL__');
   const [selectedCode, setSelectedCode] = React.useState('');
   const [checkedActions, setCheckedActions] = React.useState({});
   const [saved, setSaved] = React.useState(false);
-
-  const responses = React.useMemo(() => (
-    program === '__ALL__' ? (window.SURVEY_RESPONSES || []) : window.filterByProgram(program)
-  ), [program]);
+  const responses = React.useMemo(() => program === '__ALL__' ? (window.SURVEY_RESPONSES || []) : window.filterByProgram(program), [program, dataVersion]);
   const insights = React.useMemo(() => buildNexusInsights(responses), [responses]);
-  const selected = insights.find(item => item.code === selectedCode) || insights[0];
+  const visibleInsights = React.useMemo(() => factorCode === '__ALL__' ? insights : insights.filter(item => item.factorCode === factorCode), [insights, factorCode]);
+  const selected = visibleInsights.find(item => item.code === selectedCode) || visibleInsights[0];
 
   React.useEffect(() => {
     if (selected && selected.code !== selectedCode) setSelectedCode(selected.code);
-    setCheckedActions({});
-    setSaved(false);
-  }, [program]);
+    setCheckedActions({}); setSaved(false);
+  }, [program, factorCode, dataVersion]);
 
-  if (!selected) return <div className="admin-subpage">Chưa có dữ liệu để phân tích.</div>;
+  if (!selected) return <div className="admin-subpage"><button className="admin-back-link" onClick={onBack}>← Quay lại</button><p>Chưa có dữ liệu Likert hợp lệ để phân tích.</p></div>;
 
-  const toggleAction = index => {
-    setCheckedActions(current => ({ ...current, [index]: !current[index] }));
-    setSaved(false);
-  };
+  const toggleAction = index => { setCheckedActions(current => ({ ...current, [index]: !current[index] })); setSaved(false); };
   const chosenCount = Object.values(checkedActions).filter(Boolean).length;
   const savePlan = () => {
     const storageKey = 'nexusImprovementPlans';
@@ -160,102 +262,54 @@ function DecisionSupport({ onBack }) {
     try { plans = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch (_) { plans = []; }
     const planId = `${program}:${selected.code}`;
     const plan = {
-      id: planId,
-      program: program === '__ALL__' ? 'Tất cả hoạt động' : program,
-      itemCode: selected.code,
-      issue: selected.issue,
-      actions: selectedActions,
-      metric: selected.metric,
-      target: selected.target,
-      status: 'Chờ triển khai',
-      savedAt: new Date().toLocaleString('vi-VN')
+      id: planId, program: program === '__ALL__' ? 'Tất cả hoạt động' : program,
+      itemCode: selected.code, issue: selected.issue,
+      evidence: { n: selected.n, performance: selected.performance, importance: selected.importance, negativeComments: selected.negativeEvidence.length },
+      actions: selectedActions, metric: selected.metric, target: selected.target,
+      status: 'Chờ triển khai', savedAt: new Date().toLocaleString('vi-VN')
     };
     localStorage.setItem(storageKey, JSON.stringify([...plans.filter(entry => entry.id !== planId), plan]));
     setSaved(true);
   };
+  const displayedEvidence = [...selected.evidence].sort((a, b) => (a.sentiment === 'Tiêu cực' ? -1 : 1) - (b.sentiment === 'Tiêu cực' ? -1 : 1)).slice(0, 8);
 
   return (
     <div className="admin-subpage nexus-page">
       <button className="admin-back-link" onClick={onBack}>← Quay lại</button>
       <div className="admin-subpage__heading nexus-heading">
-        <div>
-          <h1>NEXUS — Từ phản hồi đến hành động</h1>
-          <p>Likert chỉ ra điểm yếu · Phản hồi mở giải thích nguyên nhân · Kho giải pháp đề xuất cách cải thiện</p>
+        <div><h1>NEXUS — Từ phản hồi thật đến hành động</h1><p>Đang phân tích {responses.length} phiếu · 21 tiêu chí + 1 điểm tổng thể · 4 trường phản hồi mở</p></div>
+        <div className="nexus-filter-row">
+          <label className="nexus-program-filter">Hoạt động<select value={program} onChange={event => setProgram(event.target.value)}><option value="__ALL__">Tất cả hoạt động</option>{programs.map(name => <option key={name}>{name}</option>)}</select></label>
+          <label className="nexus-program-filter">Nhóm thang đo<select value={factorCode} onChange={event => setFactorCode(event.target.value)}><option value="__ALL__">Tất cả nhóm</option>{factors.map(factor => <option key={factor.code} value={factor.code}>{factor.name}</option>)}</select></label>
         </div>
-        <label className="nexus-program-filter">Hoạt động
-          <select value={program} onChange={event => setProgram(event.target.value)}>
-            <option value="__ALL__">Tất cả hoạt động</option>
-            {programs.map(name => <option key={name}>{name}</option>)}
-          </select>
-        </label>
       </div>
-
-      <div className="nexus-flow" aria-label="Luồng hỗ trợ ra quyết định">
-        <span>Điểm Likert</span><b>→</b><span>Phản hồi mở</span><b>→</b><span>Chẩn đoán</span><b>→</b><span>Hành động</span><b>→</b><span>Đo lại</span>
-      </div>
-
+      <div className="nexus-method-note"><strong>Phương pháp:</strong> Importance là tương quan thực tế với mức hài lòng tổng thể và được chuẩn hóa tương đối; Performance là điểm trung bình Likert. Phản hồi mở được mã hóa bằng taxonomy và từ khóa tiếng Việt cố định, không sinh ngẫu nhiên.</div>
+      <div className="nexus-flow"><span>Điểm Likert thật</span><b>→</b><span>Phản hồi mở thật</span><b>→</b><span>Joint Display</span><b>→</b><span>Kho hành động</span><b>→</b><span>Đo lại</span></div>
       <div className="nexus-layout">
         <aside className="nexus-priority-list">
-          <div className="nexus-panel-title">Cần sửa gì trước?</div>
-          {insights.map((item, index) => (
+          <div className="nexus-panel-title">Ranking — Cần sửa gì trước?</div>
+          <div className="nexus-priority-scroll">{visibleInsights.map((item, index) => (
             <button key={item.code} className={`nexus-priority-item${selected.code === item.code ? ' is-active' : ''}`} onClick={() => { setSelectedCode(item.code); setCheckedActions({}); setSaved(false); }}>
-              <span className="nexus-priority-rank">#{index + 1}</span>
-              <span className="nexus-priority-copy"><strong>{item.issue}</strong><small>{item.code} · {item.performance.toFixed(2)}/7 · {item.evidence.length} bằng chứng mở</small></span>
-              <span className={`nexus-status nexus-status--${item.classification.tone}`}>{item.classification.label}</span>
+              <span className="nexus-priority-rank">#{index + 1}</span><span className="nexus-priority-copy"><strong>{item.code} — {item.label}</strong><small>{item.performance.toFixed(2)}/7 · ảnh hưởng {Math.round(item.importance * 100)}% · n={item.n}</small></span><span className={`nexus-status nexus-status--${item.classification.tone}`}>{item.classification.label}</span>
             </button>
-          ))}
+          ))}</div>
         </aside>
-
         <main className="nexus-workspace">
-          <div className="nexus-summary-row">
-            <div><span>Ưu tiên</span><strong>{selected.priorityScore}/100</strong></div>
-            <div><span>Điểm Likert</span><strong>{selected.performance.toFixed(2)}/7</strong></div>
-            <div><span>Tỷ lệ tích cực</span><strong>{selected.positive}%</strong></div>
-            <div><span>Phản hồi liên quan</span><strong>{selected.evidence.length}</strong></div>
-          </div>
-
+          <div className="nexus-summary-row"><div><span>Điểm ưu tiên</span><strong>{selected.priorityScore}/100</strong></div><div><span>Performance</span><strong>{selected.performance.toFixed(2)}/7</strong></div><div><span>Importance tương đối</span><strong>{Math.round(selected.importance * 100)}%</strong></div><div><span>Phản hồi tiêu cực</span><strong>{selected.negativePercent}%</strong></div></div>
           <section className="nexus-joint-card">
             <div className="nexus-panel-title">Joint Display — Vì sao đây là vấn đề?</div>
             <div className="nexus-joint-grid">
-              <div className="nexus-evidence-block">
-                <span className="nexus-eyebrow">BẰNG CHỨNG ĐỊNH LƯỢNG</span>
-                <h3>{selected.code} — {selected.label}</h3>
-                <div className="nexus-big-score">{selected.performance.toFixed(2)}<small>/7</small></div>
-                <MiniLikertDistribution values={selected.distribution} />
-                <p>Importance giả lập: <strong>{Math.round(selected.importance * 100)}%</strong>. Hiệu suất thấp làm yếu tố này được xếp vào nhóm <strong>{selected.classification.label.toLowerCase()}</strong>.</p>
-              </div>
-              <div className="nexus-evidence-block nexus-open-evidence">
-                <span className="nexus-eyebrow">BẰNG CHỨNG TỪ 4 CÂU HỎI MỞ</span>
-                <h3>Phản hồi giải thích nguyên nhân</h3>
-                {selected.evidence.length ? selected.evidence.slice(0, 4).map((entry, index) => (
-                  <blockquote key={`${entry.responseId}-${index}`}><span>{entry.source}</span>“{entry.text}”</blockquote>
-                )) : <p className="nexus-empty">Chưa có phản hồi mở khớp chủ đề; cần xem sâu hoặc thu thập thêm bằng chứng.</p>}
-              </div>
+              <div className="nexus-evidence-block"><span className="nexus-eyebrow">BẰNG CHỨNG ĐỊNH LƯỢNG · {selected.factor}</span><h3>{selected.code} — {selected.label}</h3><div className="nexus-big-score">{selected.performance.toFixed(2)}<small>/7</small></div><MiniLikertDistribution values={selected.distribution} /><p><strong>{selected.positive}%</strong> đánh giá tích cực (5–7); <strong>{selected.lowRate}%</strong> chấm từ 1–4; cỡ mẫu <strong>n={selected.n}</strong>.</p><p>Mức ảnh hưởng tương đối từ dữ liệu: <strong>{Math.round(selected.importance * 100)}%</strong>. IPMA xếp vào nhóm <strong>{selected.classification.label.toLowerCase()}</strong>.</p></div>
+              <div className="nexus-evidence-block nexus-open-evidence"><span className="nexus-eyebrow">PHẢN HỒI MỞ · CHỦ ĐỀ {selected.topic}</span><h3>{selected.evidence.length} đoạn liên quan · {selected.negativeEvidence.length} tiêu cực</h3>{displayedEvidence.length ? displayedEvidence.map((entry, index) => <blockquote key={`${entry.responseId}-${index}`}><span>{entry.source} · <em className={`nexus-sentiment nexus-sentiment--${entry.sentiment === 'Tiêu cực' ? 'negative' : entry.sentiment === 'Tích cực' ? 'positive' : 'neutral'}`}>{entry.sentiment}</em>{entry.rating !== null ? ` · Likert ${entry.rating}/7` : ''}</span>“{entry.text}”</blockquote>) : <p className="nexus-empty">Chưa có phản hồi mở khớp trực tiếp với taxonomy của chủ đề này.</p>}</div>
             </div>
+            <div className={`nexus-relation nexus-relation--${selected.relationship.tone}`}><span>KẾT QUẢ TÍCH HỢP: {selected.relationship.label}</span><strong>{selected.relationship.detail}</strong></div>
             <div className="nexus-diagnosis"><span>CHẨN ĐOÁN TỔNG HỢP</span><strong>{selected.diagnosis}</strong></div>
           </section>
-
           <section className="nexus-action-card">
-            <div className="nexus-action-head">
-              <div><span className="nexus-eyebrow">KHO GIẢI PHÁP QUẢN TRỊ</span><h2>Sửa như thế nào?</h2></div>
-              <span className="nexus-knowledge-badge">Giải pháp chuẩn · Có thể kiểm chứng</span>
-            </div>
-            <div className="nexus-actions">
-              {selected.actions.map((action, index) => (
-                <label key={index} className={checkedActions[index] ? 'is-checked' : ''}>
-                  <input type="checkbox" checked={!!checkedActions[index]} onChange={() => toggleAction(index)} />
-                  <span><b>{index + 1}</b>{action}</span>
-                </label>
-              ))}
-            </div>
-            <div className="nexus-measure">
-              <div><span>Chỉ số theo dõi</span><strong>{selected.metric}</strong></div>
-              <div><span>Mục tiêu lần tới</span><strong>{selected.target}</strong></div>
-            </div>
-            <div className="nexus-plan-footer">
-              <p>{chosenCount ? `Đã chọn ${chosenCount}/${selected.actions.length} hành động cho kế hoạch.` : 'Chọn các hành động phù hợp trước khi lưu kế hoạch cải thiện.'}</p>
-              <button disabled={!chosenCount} onClick={savePlan}>{saved ? '✓ Đã lưu vào kế hoạch' : 'Lưu kế hoạch cải thiện'}</button>
-            </div>
+            <div className="nexus-action-head"><div><span className="nexus-eyebrow">ACTION KNOWLEDGE BASE · {selected.factor}</span><h2>Sửa như thế nào?</h2></div><span className="nexus-knowledge-badge">Giải pháp cố định · Có thể kiểm chứng</span></div>
+            <div className="nexus-actions">{selected.actions.map((action, index) => <label key={index} className={checkedActions[index] ? 'is-checked' : ''}><input type="checkbox" checked={!!checkedActions[index]} onChange={() => toggleAction(index)} /><span><b>{index + 1}</b>{action}</span></label>)}</div>
+            <div className="nexus-measure"><div><span>Chỉ số theo dõi</span><strong>{selected.metric}</strong></div><div><span>Mục tiêu lần tới</span><strong>{selected.target}</strong></div></div>
+            <div className="nexus-plan-footer"><p>{saved ? 'Kế hoạch đã được lưu trong trình duyệt của thiết bị này.' : chosenCount ? `Đã chọn ${chosenCount}/${selected.actions.length} hành động.` : 'Chọn hành động phù hợp để tạo kế hoạch cải thiện.'}</p><button disabled={!chosenCount} onClick={savePlan}>{saved ? '✓ Đã lưu kế hoạch' : 'Lưu kế hoạch cải thiện'}</button></div>
           </section>
         </main>
       </div>

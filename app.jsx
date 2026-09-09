@@ -546,7 +546,9 @@ function App() {
       )}
 
       {view === 'decision-support' && (
-        <DecisionSupport onBack={() => setView('menu')} />
+        loading
+          ? <div className="admin-subpage">Đang tải dữ liệu để phân tích...</div>
+          : <DecisionSupport onBack={() => setView('menu')} dataVersion={dataKey} />
       )}
 
       {view === 'responses' && (
