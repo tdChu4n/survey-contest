@@ -91,12 +91,9 @@ const Icon = {
 function TopNav() {
   return (
     <header className="nav contest-admin-nav">
-      <div className="anonymous-brand">
-        <div className="anonymous-brand__mark">X</div>
-        <div className="anonymous-brand__copy">
-          <div className="anonymous-brand__name">TRƯỜNG X</div>
-          <div className="anonymous-brand__unit">CỔNG QUẢN TRỊ DỮ LIỆU</div>
-        </div>
+      <div className="contest-public-logos" aria-label="Đoàn Thanh niên và Hội Sinh viên">
+        <img src="logo-doan.png" alt="Logo Đoàn Thanh niên" />
+        <img src="logo-hoi.png" alt="Logo Hội Sinh viên" />
       </div>
       <div className="nav__spacer" />
       <div className="nav__user">

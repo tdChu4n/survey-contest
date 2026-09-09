@@ -8,13 +8,39 @@ const APPS_SCRIPT_URL = window.CONTEST_CONFIG.appsScriptUrl;
 
 function Footer() {
   return (
-    <footer className="contest-footer admin-contest-footer">
-      <div className="contest-footer__inner">
-        <div><h3>VỀ HỆ THỐNG</h3><p>Nền tảng khảo sát và đánh giá chất lượng hoạt động dành cho môi trường giáo dục.</p></div>
-        <div><h3>CHỨC NĂNG</h3><ul><li>Quản lý hoạt động</li><li>Báo cáo khảo sát</li><li>Tổng hợp ý kiến</li></ul></div>
-        <div><h3>CHẾ ĐỘ ẨN DANH</h3><p>Thông tin nhận diện đơn vị và dữ liệu cá nhân không được công bố trong phiên bản này.</p></div>
+    <footer className="contest-footer site-footer admin-contest-footer">
+      <div className="footer-floating-box">
+        <div className="ffb-col">
+          <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          <div className="ffb-title">ĐOÀN THANH NIÊN</div><div className="ffb-desc">Đoàn Thanh niên X<br/>Đoàn khoa X</div>
+        </div>
+        <div className="ffb-col">
+          <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          <div className="ffb-title">HỘI SINH VIÊN</div><div className="ffb-desc">Hội Sinh viên X<br/>Liên Chi hội sinh viên<br/>khoa X</div>
+        </div>
+        <div className="ffb-col">
+          <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div className="ffb-title">ĐỊA CHỈ</div><div className="ffb-desc">Cơ sở X<br/>Địa chỉ X<br/>Thành phố X</div>
+        </div>
+        <div className="ffb-col">
+          <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <div className="ffb-title">LIÊN HỆ</div><div className="ffb-desc">doanhoi.x@x.edu.vn</div>
+        </div>
       </div>
-      <div className="contest-footer__bottom"><span>© 2026 Trường X. Bản trình diễn ẩn danh.</span><span>Lắng nghe • Thấu hiểu • Cải tiến</span></div>
+
+      <div className="footer-main">
+        <div className="fm-col fm-brand">
+          <div className="footer-report-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 80"><rect x="8" y="12" width="48" height="64" rx="4" fill="#fff" stroke="#f5a623" strokeWidth="3"/><path d="M24 8h16v8H24z" fill="#f5a623"/><circle cx="20" cy="32" r="3" fill="#0f6c56"/><rect x="28" y="30" width="20" height="4" fill="#e0e0e0"/><circle cx="20" cy="42" r="3" fill="#0f6c56"/><rect x="28" y="40" width="20" height="4" fill="#e0e0e0"/><circle cx="20" cy="52" r="3" fill="#0f6c56"/><rect x="28" y="50" width="12" height="4" fill="#e0e0e0"/></svg>
+            <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#1565c0"/><path d="M24 24V4a20 20 0 0120 20z" fill="#f5a623"/><path d="M24 24H4A20 20 0 0124 4z" fill="#e8670a"/></svg>
+          </div>
+          <div className="fm-brand-text"><div className="fm-title">VỀ HỆ THỐNG</div><p>Hệ thống Khảo sát &amp; Đánh giá chất lượng<br/>hoạt động Đoàn – Hội</p><div className="slogan">Lắng nghe • Thấu hiểu • Cải tiến</div></div>
+        </div>
+        <div className="fm-col fm-compact"><div className="fm-title">CHỨC NĂNG</div><ul className="fm-list"><li>Thêm khảo sát hoạt động</li><li>Báo cáo hoạt động cơ sở</li><li>Kết quả khảo sát</li><li>Hòm thư lắng nghe</li></ul></div>
+        <div className="fm-col fm-compact"><div className="fm-title">LIÊN KẾT X</div><ul className="fm-list"><li>Trang chủ X</li><li>Đoàn - Hội X</li><li>Cổng thông tin X</li><li>Hệ thống nhận diện</li></ul></div>
+      </div>
+
+      <div className="footer-bottom"><div>© 2026 Đoàn - Hội khoa X. All Rights Reserved</div><div>Chính sách Bảo vệ dữ liệu cá nhân</div><div className="fb-socials"><span className="fb-social-btn" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></span><button type="button" className="scroll-top-btn" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Lên đầu trang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="18 15 12 9 6 15"/></svg></button></div></div>
     </footer>
   );
 }
