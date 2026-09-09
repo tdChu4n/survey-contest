@@ -825,7 +825,7 @@
     </div>
     <div class="modal-body">
       <div class="email-display" id="mailboxEmailDisplay"></div>
-      <p class="mailbox-sub">Hãy chia sẻ những tâm tư, nguyện vọng và góp ý của bạn với Đoàn - Hội. Mọi ý kiến đều được ghi nhận và phản hồi kịp thời.</p>
+      <p class="mailbox-sub">Hãy chia sẻ những tâm tư, nguyện vọng, góp ý của bạn với Đoàn - Hội khoa X. Mọi ý kiến đều được ghi nhận và phản hồi kịp thời.</p>
       <label style="display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:6px;">
         Nội dung ý kiến <span style="color:#c00;">*</span>
       </label>
@@ -1484,7 +1484,7 @@
   // ── Mailbox ───────────────────────────────────────
   function openMailbox() {
     document.getElementById('mailboxEmailDisplay').innerHTML =
-      `<strong>Chế độ ẩn danh:</strong> Ý kiến được gắn với mã người tham gia, không kèm email thật.`;
+      `<strong>Email:</strong> ${esc(currentUser.email)} <span style="color:#888;font-size:12px;margin-left:8px;">(Được ghi nhận tự động)</span>`;
     document.getElementById('mailboxContent').value = '';
     document.getElementById('mailboxCharHint').textContent = '0 ký tự';
     document.getElementById('mailboxContent').classList.remove('invalid');
