@@ -12,6 +12,6 @@ window.CONTEST_CONFIG = Object.freeze({
   googleClientId: '84059448728-7698b8sorrp7p4qrq2shhiapvbsgd22u.apps.googleusercontent.com',
 
   // Chỉ dùng cho bản trình diễn cục bộ. Không xem đây là cơ chế xác thực production.
-  demoAdminUser: 'reviewer',
-  demoAdminPass: 'reviewer-demo'
+  demoAdminUser: 'admin',
+  demoAdminPass: 'admin123'
 });
