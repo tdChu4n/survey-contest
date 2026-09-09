@@ -1255,16 +1255,31 @@
   function renderForm() {
     let html = '';
 
-    html += `<div class="email-display"><strong>Chế độ ẩn danh:</strong> Hệ thống chỉ lưu mã người tham gia, không lưu họ tên, email, số điện thoại hay liên kết mạng xã hội.</div>`;
+    html += `<div class="email-display">
+      <strong>Email:</strong> ${esc(currentUser.email)}
+      <span style="color:#888;font-size:12px;margin-left:8px;">(Được ghi nhận tự động)</span>
+    </div>`;
 
     // Thông tin cá nhân
     const FACULTIES = ['Nhóm ngành A','Nhóm ngành B','Nhóm ngành C','Nhóm ngành D','Khác'];
     html += `<div class="info-grid">
       <div class="info-field">
-        <label>Nhóm năm học <span class="req">*</span></label>
+        <label>Họ và tên đệm <span class="req">*</span></label>
+        <input type="text" id="field_lastName" name="lastName">
+      </div>
+      <div class="info-field">
+        <label>Tên <span class="req">*</span></label>
+        <input type="text" id="field_firstName" name="firstName">
+      </div>
+      <div class="info-field">
+        <label>Lớp <span class="req">*</span></label>
+        <input type="text" id="field_studentClass" name="studentClass">
+      </div>
+      <div class="info-field">
+        <label>Khóa <span class="req">*</span></label>
         <select id="field_cohort" name="cohort">
           <option value="">-- Chọn --</option>
-          <option>Năm 1</option><option>Năm 2</option><option>Năm 3</option><option>Năm 4 trở lên</option>
+          <option>49</option><option>50</option><option>51</option><option>Khác</option>
         </select>
       </div>
       <div class="info-field">
@@ -1280,6 +1295,26 @@
           <option value="">-- Chọn --</option>
           <option>Nam</option><option>Nữ</option>
         </select>
+      </div>
+      <div class="info-field">
+        <label>MSSV <span class="req">*</span></label>
+        <input type="text" id="field_studentId" name="studentId">
+      </div>
+      <div class="info-field">
+        <label>Số điện thoại <span class="req">*</span></label>
+        <input type="tel" id="field_phone" name="phone">
+      </div>
+      <div class="info-field">
+        <label>Email trường <span class="req">*</span></label>
+        <input type="email" id="field_emailUeh" name="emailUeh" placeholder="Email do trường cấp">
+      </div>
+      <div class="info-field">
+        <label>Email khác <span class="req">*</span></label>
+        <input type="email" id="field_emailOther" name="emailOther">
+      </div>
+      <div class="info-field" style="grid-column: 1 / -1;">
+        <label>Link Facebook <span class="req">*</span></label>
+        <input type="url" id="field_facebook" name="facebook" placeholder="https://www.facebook.com/...">
       </div>
     </div>`;
 
@@ -1338,9 +1373,17 @@
   // ── Validate ──────────────────────────────────────
   function validateForm() {
     const requiredFields = [
-      { id: 'field_cohort', name: 'Nhóm năm học' },
+      { id: 'field_lastName', name: 'Họ và tên đệm' },
+      { id: 'field_firstName', name: 'Tên' },
+      { id: 'field_studentClass', name: 'Lớp' },
+      { id: 'field_cohort', name: 'Khóa' },
       { id: 'field_faculty', name: 'Nhóm ngành' },
-      { id: 'field_gender', name: 'Giới tính' }
+      { id: 'field_gender', name: 'Giới tính' },
+      { id: 'field_studentId', name: 'MSSV' },
+      { id: 'field_phone', name: 'Số điện thoại' },
+      { id: 'field_emailUeh', name: 'Email trường' },
+      { id: 'field_emailOther', name: 'Email khác' },
+      { id: 'field_facebook', name: 'Link Facebook' }
     ];
 
     for (const field of requiredFields) {
@@ -1382,7 +1425,7 @@
   // ── Collect data ──────────────────────────────────
   function collectFormData() {
     const data = {};
-    const fields = ['cohort', 'faculty', 'gender'];
+    const fields = ['lastName', 'firstName', 'studentClass', 'cohort', 'faculty', 'gender', 'studentId', 'phone', 'emailUeh', 'emailOther', 'facebook'];
     for (const f of fields) {
       data[f] = document.getElementById('field_' + f)?.value.trim() || '';
     }
@@ -1511,9 +1554,9 @@
   }
 function renderCELGForm() {
   let html = `
-    <div class="email-display"><strong>Chế độ ẩn danh:</strong> Phiếu trả lời không lưu họ tên, email, mã sinh viên, số điện thoại hoặc liên kết mạng xã hội.</div>
+    <div class="email-display">Xin chào, <strong>${esc(currentUser.email)}</strong>. Email này sẽ được ghi lại.</div>
     <div class="scale-note">
-      Khảo sát nhu cầu, sở thích và các yếu tố ảnh hưởng đến ý định tham gia hoạt động của người học.
+      Khảo sát nhu cầu, sở thích và các yếu tố ảnh hưởng đến ý định tham gia hoạt động/sự kiện của sinh viên.
     </div>
   `;
 
@@ -1521,9 +1564,17 @@ function renderCELGForm() {
   html += `
     <h3 style="margin-top:20px; color:#005c50; border-bottom:2px solid #005c50; padding-bottom:5px; margin-bottom:15px;">PHẦN A. THÔNG TIN CHUNG</h3>
     <div class="info-grid">
-      <div class="info-field"><label>Nhóm năm học <span class="req">*</span></label><select id="field_cohort" name="cohort"><option value="">-- Chọn --</option><option>Năm 1</option><option>Năm 2</option><option>Năm 3</option><option>Năm 4 trở lên</option></select></div>
+      <div class="info-field"><label>Họ và tên đệm <span class="req">*</span></label><input type="text" id="field_lastName" name="lastName"></div>
+      <div class="info-field"><label>Tên <span class="req">*</span></label><input type="text" id="field_firstName" name="firstName"></div>
+      <div class="info-field"><label>Lớp <span class="req">*</span></label><input type="text" id="field_studentClass" name="studentClass"></div>
+      <div class="info-field"><label>Khóa <span class="req">*</span></label><select id="field_cohort" name="cohort"><option value="">-- Chọn --</option><option>49</option><option>50</option><option>51</option><option>Khác</option></select></div>
       <div class="info-field"><label>Nhóm ngành <span class="req">*</span></label><select id="field_faculty" name="faculty"><option value="">-- Chọn nhóm ngành --</option>${['Nhóm ngành A','Nhóm ngành B','Nhóm ngành C','Nhóm ngành D','Khác'].map(f => `<option>${esc(f)}</option>`).join('')}</select></div>
       <div class="info-field"><label>Giới tính <span class="req">*</span></label><select id="field_gender" name="gender"><option value="">-- Chọn --</option><option>Nam</option><option>Nữ</option></select></div>
+      <div class="info-field"><label>MSSV <span class="req">*</span></label><input type="text" id="field_studentId" name="studentId"></div>
+      <div class="info-field"><label>Số điện thoại <span class="req">*</span></label><input type="tel" id="field_phone" name="phone"></div>
+      <div class="info-field"><label>Email trường <span class="req">*</span></label><input type="email" id="field_emailUeh" name="emailUeh" placeholder="Email do trường cấp"></div>
+      <div class="info-field"><label>Email khác <span class="req">*</span></label><input type="email" id="field_emailOther" name="emailOther"></div>
+      <div class="info-field" style="grid-column: 1 / -1;"><label>Link Facebook <span class="req">*</span></label><input type="url" id="field_facebook" name="facebook" placeholder="https://www.facebook.com/..."></div>
     </div>
     <div class="text-section">
       <label>Trong 12 tháng qua, bạn tham gia khoảng bao nhiêu hoạt động/sự kiện tại cơ sở giáo dục? <span class="req">*</span></label>
@@ -1706,7 +1757,7 @@ window.updateE2Options = function() {
 
 function collectCELGFormData() {
   const data = {};
-  const fields = ['cohort', 'faculty', 'gender'];
+  const fields = ['lastName', 'firstName', 'studentClass', 'cohort', 'faculty', 'gender', 'studentId', 'phone', 'emailUeh', 'emailOther', 'facebook'];
   for (const f of fields) { data[f] = document.getElementById('field_' + f)?.value.trim() || ''; }
   
   data.Q_A8 = document.querySelector('input[name="Q_A8"]:checked')?.value || '';
@@ -1757,9 +1808,17 @@ function collectCELGFormData() {
 
 function validateCELGForm() {
   const reqFields = [
-    { id: 'field_cohort', name: 'Nhóm năm học' },
+    { id: 'field_lastName', name: 'Họ và tên đệm' },
+    { id: 'field_firstName', name: 'Tên' },
+    { id: 'field_studentClass', name: 'Lớp' },
+    { id: 'field_cohort', name: 'Khóa' },
     { id: 'field_faculty', name: 'Nhóm ngành' },
-    { id: 'field_gender', name: 'Giới tính' }
+    { id: 'field_gender', name: 'Giới tính' },
+    { id: 'field_studentId', name: 'MSSV' },
+    { id: 'field_phone', name: 'Số điện thoại' },
+    { id: 'field_emailUeh', name: 'Email trường' },
+    { id: 'field_emailOther', name: 'Email khác' },
+    { id: 'field_facebook', name: 'Link Facebook' }
   ];
   for (const field of reqFields) {
     const el = document.getElementById(field.id);
