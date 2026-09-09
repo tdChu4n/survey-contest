@@ -1118,9 +1118,9 @@
     }
   }
 
-  async function handleCredentialResponse(response) {
+  function handleCredentialResponse(response) {
     const p = parseJwt(response.credential);
-    currentUser = { anonymousId: await anonymizeIdentifier(p.email), name: 'Người tham gia', picture: '' };
+    currentUser = { email: p.email, name: p.name, picture: p.picture };
     sessionStorage.setItem('studentUser', JSON.stringify(currentUser));
     closeLoginModal();
     applyStudentUI();
@@ -1128,7 +1128,7 @@
   }
 
   function demoStudentLogin() {
-    currentUser = { anonymousId: 'demo-participant', name: 'Người tham gia', picture: '' };
+    currentUser = { email: 'demo@example.edu.vn', name: 'Người dùng Demo', picture: '' };
     sessionStorage.setItem('studentUser', JSON.stringify(currentUser));
     closeLoginModal();
     applyStudentUI();
@@ -1140,7 +1140,7 @@
     document.getElementById('studentNavInfo').style.display = 'flex';
     document.getElementById('navAvatar').src                = currentUser.picture || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"%3E%3Crect width="40" height="40" rx="20" fill="%23ff5a00"/%3E%3Ctext x="20" y="26" text-anchor="middle" font-size="16" fill="white" font-family="Arial"%3EX%3C/text%3E%3C/svg%3E';
     document.getElementById('navUserName').textContent      = currentUser.name;
-    document.getElementById('navUserEmail').textContent     = 'Mã ẩn danh: ' + currentUser.anonymousId.slice(0, 12);
+    document.getElementById('navUserEmail').textContent     = currentUser.email;
     document.getElementById('loginSection').style.display   = 'none';
     document.getElementById('surveySection').style.display  = 'block';
     document.getElementById('mailboxFab').style.display     = 'flex';
@@ -1164,7 +1164,7 @@
     if (saved) {
       try {
         currentUser = JSON.parse(saved);
-        if (!currentUser.anonymousId) throw new Error('Phiên cũ không tương thích chế độ ẩn danh.');
+        if (!currentUser.email) throw new Error('Phiên đăng nhập không hợp lệ.');
         applyStudentUI();
         loadCourses();
       } catch { sessionStorage.removeItem('studentUser'); }
@@ -1180,7 +1180,7 @@
         renderTable([{ rowIndex: 1, year: '2026', courseName: 'Hoạt động mẫu dành cho vòng đánh giá', locked: false, status: 'Chưa thực hiện', ketThucKhaoSat: 'Không thời hạn' }]);
         return;
       }
-      const url = CONFIG.APPS_SCRIPT_URL + '?action=getCourses&email=' + encodeURIComponent(currentUser.anonymousId);
+      const url = CONFIG.APPS_SCRIPT_URL + '?action=getCourses&email=' + encodeURIComponent(currentUser.email);
       const data = await (await fetch(url)).json();
       renderTable(data.courses || []);
     } catch {
@@ -1414,7 +1414,7 @@
       const formData = isCELG ? collectCELGFormData() : collectFormData();
       const params = new URLSearchParams({
         action:    'submitSurvey',
-        email:     currentUser.anonymousId,
+        email:     currentUser.email,
         rowIndex:  currentSurveyRow.rowIndex,
         program:   currentSurveyRow.courseName,
         year:      currentSurveyRow.year,
@@ -1474,7 +1474,7 @@
     try {
       const params = new URLSearchParams({
         action:  'submitMailbox',
-        email:   currentUser.anonymousId,
+        email:   currentUser.email,
         content,
       });
       const result = CONFIG.APPS_SCRIPT_URL
