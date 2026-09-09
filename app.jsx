@@ -364,6 +364,19 @@ function HomeMenu({ onViewChange, onAddActivityClick }) {
       </div>
 
       <div className="home-menu__section">
+        <div className="home-menu__header">NEXUS — Hỗ trợ ra quyết định</div>
+        <div className="home-menu__cards">
+          <div className="home-menu__card card-orange" onClick={() => onViewChange('decision-support')}>
+            <div className="home-menu__icon-wrap icon-orange">
+              <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 19h16M6 16l4-4 3 2 5-7"/><circle cx="18" cy="7" r="2"/><path d="M12 4v3M4 8h3"/></svg>
+            </div>
+            <h3 className="home-menu__card-title">Phân tích vấn đề và gợi ý cải thiện</h3>
+            <span className="home-menu__arrow">→</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="home-menu__section">
         <div className="home-menu__header">Tổng hợp Hòm thư lắng nghe</div>
         <div className="home-menu__cards">
           <div className="home-menu__card card-green" onClick={() => onViewChange('mailbox')}>
@@ -390,7 +403,7 @@ function HomeMenu({ onViewChange, onAddActivityClick }) {
 function App() {
   const [view, setView] = useState(() => {
     const hash = window.location.hash.replace('#', '');
-    return ['menu', 'activity-report', 'dashboard', 'mailbox', 'responses'].includes(hash) ? hash : 'menu';
+    return ['menu', 'activity-report', 'dashboard', 'decision-support', 'mailbox', 'responses'].includes(hash) ? hash : 'menu';
   });
   const [selectedPrograms, setSelectedPrograms] = useState(() => new Set());
   const [dataKey, setDataKey] = useState(0);
@@ -408,7 +421,7 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      if (['menu', 'activity-report', 'dashboard', 'mailbox', 'responses'].includes(hash)) {
+      if (['menu', 'activity-report', 'dashboard', 'decision-support', 'mailbox', 'responses'].includes(hash)) {
         setView(hash);
       } else {
         setView('menu');
@@ -530,6 +543,10 @@ function App() {
             <MailboxSection entries={mailbox} />
           </main>
         </div>
+      )}
+
+      {view === 'decision-support' && (
+        <DecisionSupport onBack={() => setView('menu')} />
       )}
 
       {view === 'responses' && (

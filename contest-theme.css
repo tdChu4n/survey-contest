@@ -628,3 +628,86 @@ body {
 @media (min-width: 761px) and (max-width: 1050px) {
   .activity-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* NEXUS — Joint Display and action-oriented decision support */
+.nexus-page { width: min(1380px, calc(100% - 36px)); }
+.nexus-heading { align-items: flex-end; }
+.nexus-program-filter { min-width: 260px; display: flex; flex-direction: column; gap: 7px; color: #64748b; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .45px; }
+.nexus-program-filter select { min-height: 42px; padding: 9px 36px 9px 12px; border: 1px solid var(--contest-line); border-radius: 9px; color: var(--contest-navy); background: #fff; font: inherit; font-size: 12px; text-transform: none; letter-spacing: 0; }
+.nexus-flow { margin: -6px 0 22px; padding: 12px 16px; display: flex; align-items: center; justify-content: center; gap: 12px; border: 1px solid #d8e5e4; border-radius: 10px; color: #536174; background: #f8fbfb; font-size: 12px; font-weight: 700; }
+.nexus-flow span { padding: 6px 11px; border-radius: 999px; color: #075f5a; background: #e7f5f3; }
+.nexus-flow b { color: var(--contest-orange); font-size: 17px; }
+.nexus-layout { display: grid; grid-template-columns: minmax(280px, .75fr) minmax(0, 2fr); gap: 20px; align-items: start; }
+.nexus-priority-list, .nexus-joint-card, .nexus-action-card { border: 1px solid var(--contest-line); border-radius: 13px; background: #fff; box-shadow: 0 7px 22px rgba(16,38,74,.055); }
+.nexus-priority-list { position: sticky; top: 96px; padding: 16px; }
+.nexus-panel-title { margin-bottom: 13px; color: var(--contest-navy); font-size: 14px; font-weight: 800; }
+.nexus-priority-item { width: 100%; margin-top: 9px; padding: 13px 12px; display: grid; grid-template-columns: 32px 1fr; gap: 3px 9px; border: 1px solid var(--contest-line); border-radius: 10px; color: #334155; background: #fff; text-align: left; transition: .15s ease; }
+.nexus-priority-item:hover, .nexus-priority-item.is-active { border-color: #70aaa5; background: #f0f8f7; transform: translateY(-1px); }
+.nexus-priority-rank { grid-row: 1 / 3; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; color: #fff; background: var(--contest-navy); font-size: 11px; font-weight: 800; }
+.nexus-priority-copy { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.nexus-priority-copy strong { color: var(--contest-navy); font-size: 12px; line-height: 1.45; }
+.nexus-priority-copy small { color: #728096; font-size: 10px; line-height: 1.4; }
+.nexus-status { grid-column: 2; width: fit-content; margin-top: 5px; padding: 4px 8px; border-radius: 999px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .25px; }
+.nexus-status--urgent { color: #a12d1c; background: #fff0eb; }
+.nexus-status--maintain { color: #087052; background: #e7f7f0; }
+.nexus-status--inspect { color: #8a5700; background: #fff5d9; }
+.nexus-status--watch { color: #365c88; background: #eaf2fb; }
+.nexus-workspace { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.nexus-summary-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.nexus-summary-row > div { padding: 15px 16px; border: 1px solid var(--contest-line); border-top: 3px solid var(--contest-teal); border-radius: 10px; background: #fff; }
+.nexus-summary-row > div:nth-child(2) { border-top-color: var(--contest-orange); }
+.nexus-summary-row > div:nth-child(3) { border-top-color: var(--contest-blue); }
+.nexus-summary-row > div:nth-child(4) { border-top-color: var(--contest-purple); }
+.nexus-summary-row span { display: block; margin-bottom: 5px; color: #718096; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.nexus-summary-row strong { color: var(--contest-navy); font-size: 22px; }
+.nexus-joint-card, .nexus-action-card { padding: 20px; }
+.nexus-joint-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.nexus-evidence-block { min-width: 0; padding: 18px; border: 1px solid #e2e8ef; border-radius: 11px; background: #fafcfd; }
+.nexus-eyebrow { color: #08756f; font-size: 9px; font-weight: 800; letter-spacing: .75px; }
+.nexus-evidence-block h3 { min-height: 42px; margin: 7px 0 12px; color: var(--contest-navy); font-size: 14px; line-height: 1.5; }
+.nexus-big-score { margin-bottom: 12px; color: var(--contest-orange); font-size: 38px; font-weight: 800; line-height: 1; }
+.nexus-big-score small { margin-left: 3px; color: #94a3b8; font-size: 14px; }
+.nexus-likert-bar { height: 13px; display: flex; overflow: hidden; border-radius: 999px; background: #e5e7eb; }
+.nexus-likert-bar span { height: 100%; min-width: 3px; }
+.nexus-likert-labels { margin-top: 5px; display: flex; justify-content: space-between; color: #8793a5; font-size: 9px; }
+.nexus-evidence-block > p { margin: 14px 0 0; color: #64748b; font-size: 11px; line-height: 1.6; }
+.nexus-open-evidence { max-height: 310px; overflow-y: auto; }
+.nexus-open-evidence blockquote { margin: 0 0 8px; padding: 10px 11px; border-left: 3px solid var(--contest-yellow); border-radius: 0 7px 7px 0; color: #475569; background: #fff; font-size: 10px; line-height: 1.55; }
+.nexus-open-evidence blockquote span { display: block; margin-bottom: 3px; color: #08756f; font-size: 8px; font-weight: 800; text-transform: uppercase; }
+.nexus-empty { padding: 20px; color: #8290a2; text-align: center; }
+.nexus-diagnosis { margin-top: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 5px; border-left: 5px solid var(--contest-orange); border-radius: 7px; color: var(--contest-navy); background: #fff7ef; }
+.nexus-diagnosis span { color: #b94709; font-size: 9px; font-weight: 800; letter-spacing: .65px; }
+.nexus-diagnosis strong { font-size: 12px; line-height: 1.55; }
+.nexus-action-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.nexus-action-head h2 { margin: 5px 0 14px; color: var(--contest-navy); font-size: 19px; }
+.nexus-knowledge-badge { padding: 6px 10px; border: 1px solid #cfe5df; border-radius: 999px; color: #08705e; background: #eff9f6; font-size: 9px; font-weight: 800; }
+.nexus-actions { display: grid; gap: 9px; }
+.nexus-actions label { padding: 12px 13px; display: flex; align-items: flex-start; gap: 11px; border: 1px solid var(--contest-line); border-radius: 9px; color: #425066; background: #fff; cursor: pointer; font-size: 11px; line-height: 1.55; }
+.nexus-actions label.is-checked { border-color: #73b5a9; background: #eff9f6; }
+.nexus-actions input { margin-top: 4px; accent-color: var(--contest-teal); }
+.nexus-actions label span { display: flex; gap: 10px; }
+.nexus-actions label b { width: 22px; height: 22px; flex: 0 0 22px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: var(--contest-teal); font-size: 10px; }
+.nexus-measure { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.nexus-measure > div { padding: 12px 14px; border-radius: 9px; background: #f4f7fa; }
+.nexus-measure span { display: block; margin-bottom: 4px; color: #728096; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.nexus-measure strong { color: var(--contest-navy); font-size: 10px; line-height: 1.5; }
+.nexus-plan-footer { margin-top: 15px; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 15px; border-top: 1px solid var(--contest-line); }
+.nexus-plan-footer p { margin: 0; color: #64748b; font-size: 10px; }
+.nexus-plan-footer button { padding: 10px 15px; border-radius: 8px; color: #fff; background: var(--contest-orange); font-size: 11px; font-weight: 800; }
+.nexus-plan-footer button:disabled { cursor: not-allowed; opacity: .45; }
+
+@media (max-width: 980px) {
+  .nexus-layout { grid-template-columns: 1fr; }
+  .nexus-priority-list { position: static; }
+  .nexus-joint-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .nexus-heading { align-items: stretch; flex-direction: column; }
+  .nexus-program-filter { min-width: 0; }
+  .nexus-flow { justify-content: flex-start; overflow-x: auto; }
+  .nexus-flow span { white-space: nowrap; }
+  .nexus-summary-row { grid-template-columns: repeat(2, 1fr); }
+  .nexus-measure { grid-template-columns: 1fr; }
+  .nexus-plan-footer { align-items: stretch; flex-direction: column; }
+}
