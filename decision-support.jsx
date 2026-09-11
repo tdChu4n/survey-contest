@@ -57,19 +57,19 @@ const NEXUS_FACTOR_KNOWLEDGE = {
 };
 
 const NEXUS_ITEM_TOPICS = {
-  DVTT1: { topic: 'Thông tin kịp thời', keywords: ['thong bao','thong tin','email','fanpage','tre','muon','kip thoi','lich'] },
-  DVTT2: { topic: 'Địa điểm và chỉ dẫn', keywords: ['dia diem','phong','duong','ban do','tim','vi tri'] },
-  DVTT3: { topic: 'Thông tin đăng ký', keywords: ['truyen thong','dang ky','huong dan','ro rang','the le'] },
+  DVTT1: { topic: 'Thông tin kịp thời', keywords: ['thong bao tre','thong tin tre','gui tre','cap nhat tre','kip thoi','qua muon','sat gio','doi lich','thay doi lich'] },
+  DVTT2: { topic: 'Địa điểm và chỉ dẫn', keywords: ['dia diem','phong hoc','phong to chuc','khu vuc dien ra','ban do','chi duong','duong den','duong di','kho tim','tim dia diem','vi tri to chuc'] },
+  DVTT3: { topic: 'Thông tin đăng ký', keywords: ['email','truyen thong','dang ky','huong dan','ro rang','chua ro','noi dung cu the','khong biet','the le'] },
   DVTT4: { topic: 'Ấn phẩm truyền thông', keywords: ['poster','an pham','hinh anh','thiet ke','thu hut'] },
   CLCT1: { topic: 'Hỗ trợ và giải đáp', keywords: ['ho tro','giai dap','nhan su','check-in','check in','xep hang','cho lau'] },
   CLCT2: { topic: 'Hình thức hoạt động', keywords: ['da dang','hinh thuc','workshop','tro choi','tuong tac'] },
   CLCT3: { topic: 'Chiều sâu nội dung', keywords: ['noi dung','kien thuc','tim hieu','chuyen sau','hoc hoi'] },
   CLCT4: { topic: 'Mức độ phù hợp', keywords: ['muc tieu','chu de','phu hop','lan man','dung nhu'] },
   CLCT5: { topic: 'Bố cục và thời gian', keywords: ['thoi gian','keo dai','cham','lich trinh','bo cuc','rundown'] },
-  CSVC1: { topic: 'Không gian tổ chức', keywords: ['khong gian','quy mo','phong','chat choi','dia diem'] },
+  CSVC1: { topic: 'Không gian tổ chức', keywords: ['khong gian','quy mo','phong hoc','phong to chuc','chat choi','dia diem to chuc'] },
   CSVC2: { topic: 'Thiết bị kỹ thuật', keywords: ['am thanh','anh sang','micro','loa','may chieu','thiet bi'] },
   CSVC3: { topic: 'Sự thoải mái', keywords: ['cho ngoi','ghe','nong','lanh','dieu hoa','thoai mai'] },
-  GTCT1: { topic: 'Giá trị thực tế', keywords: ['gia tri','huu ich','thiet thuc','ap dung','xung dang'] },
+  GTCT1: { topic: 'Giá trị thực tế', keywords: ['gia tri','huu ich','thiet thuc','ap dung','xung dang','hoc duoc','hieu duoc','nhan duoc'] },
   GTCT2: { topic: 'Kỳ vọng', keywords: ['ky vong','mong doi','vuot','that vong'] },
   SHL1: { topic: 'Hài lòng tổng thể', keywords: ['hai long','trai nghiem','tong the'] },
   SHL2: { topic: 'Cảm xúc tham gia', keywords: ['cam xuc','vui','thich','tich cuc','chan'] },
@@ -80,12 +80,22 @@ const NEXUS_ITEM_TOPICS = {
   LTT4: { topic: 'Đóng góp phản hồi', keywords: ['phan hoi','gop y','cai thien','lang nghe'] }
 };
 
-const NEXUS_NEGATIVE_WORDS = ['khong tot','chua tot','khong hai long','khong ro rang','khong kip thoi','khong phu hop','kem','te hai','tre','qua lau','cho lau','kho khan','bat tien','that vong','bi loi','hong','on ao','qua nong','chat choi','thieu','lan man','qua dai','met moi','nham chan'];
-const NEXUS_POSITIVE_WORDS = ['tot','hay','huu ich','hai long','thich','tich cuc','ro rang','kip thoi','thoai mai','an tuong','xung dang','tuyet voi'];
+const NEXUS_NEGATIVE_WORDS = ['khong tot','chua tot','khong hai long','khong ro rang','chua ro','khong kip thoi','khong phu hop','khong hieu','khong biet','khong the','khong du','khong duoc','kem','te hai','tre','qua lau','cho lau','kho khan','bat tien','that vong','bi loi','hong','on ao','qua nong','chat choi','thieu','lan man','qua dai','met moi','nham chan'];
+const NEXUS_POSITIVE_WORDS = ['tot','huu ich','hai long','thich','tich cuc','ro rang','kip thoi','thoai mai','an tuong','xung dang','tuyet voi','hoc duoc','hieu duoc','nhan duoc'];
 
 function nexusNormalize(value) {
   return String(value || '').toLowerCase().normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+}
+
+function nexusCleanWords(value) {
+  return nexusNormalize(value).replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function nexusHasPhrase(text, phrase) {
+  const haystack = ` ${nexusCleanWords(text)} `;
+  const needle = ` ${nexusCleanWords(phrase)} `;
+  return needle.trim() && haystack.includes(needle);
 }
 
 function nexusNumber(value) {
@@ -130,9 +140,9 @@ function nexusOutcome(response, itemCode) {
 function nexusSentiment(text, field) {
   const normalized = nexusNormalize(text);
   const noProblem = /(khong|chua) (gap|co) (kho khan|van de|bat tien)|khong co gi/.test(normalized);
-  if (noProblem) return 'Tích cực';
-  const negative = NEXUS_NEGATIVE_WORDS.filter(word => normalized.includes(word)).length;
-  const positive = NEXUS_POSITIVE_WORDS.filter(word => normalized.includes(word)).length;
+  if (noProblem) return 'Trung lập';
+  const negative = NEXUS_NEGATIVE_WORDS.filter(word => nexusHasPhrase(normalized, word)).length;
+  const positive = NEXUS_POSITIVE_WORDS.filter(word => nexusHasPhrase(normalized, word)).length;
   if (negative > positive) return 'Tiêu cực';
   if (positive > negative) return 'Tích cực';
   if (field === 'trouble') return 'Tiêu cực';
@@ -149,13 +159,34 @@ function nexusItemMeta() {
   return items;
 }
 
-function nexusOpenEvidence(responses, item) {
+function nexusBestItemForComment(text, field, items) {
+  const factorBias = {
+    learn: { GTCT: 3, SHL: 2 },
+    trouble: { DVTT: 2, CLCT: 2, CSVC: 2 },
+    interest: { LTT: 2, CLCT: 1, GTCT: 1 },
+    feedback: { DVTT: 1, CLCT: 1, CSVC: 1, GTCT: 1, SHL: 1, LTT: 1 }
+  };
+  let best = null;
+  let bestScore = 0;
+  items.forEach(candidate => {
+    const matched = candidate.keywords.filter(keyword => nexusHasPhrase(text, keyword));
+    if (!matched.length) return;
+    const specificity = matched.reduce((sum, keyword) => sum + nexusCleanWords(keyword).split(' ').length, 0);
+    const score = matched.length * 10 + specificity + (factorBias[field]?.[candidate.factorCode] || 0);
+    if (score > bestScore) { best = candidate; bestScore = score; }
+  });
+  if (!best && field === 'learn') return items.find(candidate => candidate.code === 'GTCT1') || null;
+  return best;
+}
+
+function nexusOpenEvidence(responses, item, items) {
   const evidence = [];
   responses.forEach((response, responseIndex) => Object.keys(NEXUS_OPEN_FIELDS).forEach(field => {
     const text = String(response[field] || '').trim();
     const normalized = nexusNormalize(text);
     if (!text || ['khong','khong co','khong co.','khong gap'].includes(normalized)) return;
-    if (item.keywords.some(keyword => normalized.includes(keyword))) {
+    const bestItem = nexusBestItemForComment(text, field, items);
+    if (bestItem?.code === item.code) {
       evidence.push({
         source: NEXUS_OPEN_FIELDS[field], text, sentiment: nexusSentiment(text, field),
         responseId: response.id || `R${responseIndex + 1}`, rating: nexusNumber(response[item.code])
@@ -187,12 +218,13 @@ function nexusClassification(importance, performance, importanceMedian, performa
 
 function buildNexusInsights(responses) {
   if (!responses.length) return [];
-  const preliminaries = nexusItemMeta().map(item => {
+  const allItems = nexusItemMeta();
+  const preliminaries = allItems.map(item => {
     const scored = responses.map(response => ({ response, value: nexusNumber(response[item.code]) })).filter(entry => entry.value !== null);
     if (!scored.length) return null;
     const values = scored.map(entry => entry.value);
     const pairs = scored.map(entry => ({ x: entry.value, y: nexusOutcome(entry.response, item.code) })).filter(pair => pair.y !== null);
-    const evidence = nexusOpenEvidence(responses, item);
+    const evidence = nexusOpenEvidence(responses, item, allItems);
     const negativeEvidence = evidence.filter(entry => entry.sentiment === 'Tiêu cực');
     const performance = nexusMean(values);
     return {
