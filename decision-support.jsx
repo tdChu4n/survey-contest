@@ -81,7 +81,7 @@ const NEXUS_ITEM_TOPICS = {
 };
 
 const NEXUS_NEGATIVE_WORDS = ['khong tot','chua tot','khong hai long','khong ro rang','chua ro','khong kip thoi','khong phu hop','khong hieu','khong biet','khong the','khong du','khong duoc','kem','te hai','tre','qua lau','cho lau','kho khan','bat tien','that vong','bi loi','hong','on ao','qua nong','chat choi','thieu','lan man','qua dai','met moi','nham chan'];
-const NEXUS_POSITIVE_WORDS = ['tot','huu ich','hai long','thich','tich cuc','ro rang','kip thoi','thoai mai','an tuong','xung dang','tuyet voi','hoc duoc','hieu duoc','nhan duoc'];
+const NEXUS_POSITIVE_WORDS = ['tot','huu ich','hai long','thich','vui','rat vui','vui lam','tich cuc','ro rang','kip thoi','thoai mai','an tuong','xung dang','tuyet voi','hoc duoc','hieu duoc','nhan duoc'];
 
 function nexusNormalize(value) {
   return String(value || '').toLowerCase().normalize('NFD')
@@ -139,10 +139,12 @@ function nexusOutcome(response, itemCode) {
 
 function nexusSentiment(text, field) {
   const normalized = nexusNormalize(text);
-  const noProblem = /(khong|chua) (gap|co) (kho khan|van de|bat tien)|khong co gi/.test(normalized);
-  if (noProblem) return 'Trung lập';
+  const cleaned = nexusCleanWords(normalized);
+  const noProblem = /^(da )?khong$|^(da )?khong a$|(?:khong|chua) (?:gap|co|thay) (?:kho khan|van de|bat tien|gi)|khong co gi/.test(cleaned)
+    || /^(da )?khong\s*[,;]/.test(normalized.trim());
   const negative = NEXUS_NEGATIVE_WORDS.filter(word => nexusHasPhrase(normalized, word)).length;
   const positive = NEXUS_POSITIVE_WORDS.filter(word => nexusHasPhrase(normalized, word)).length;
+  if (noProblem) return positive > 0 ? 'Tích cực' : 'Trung lập';
   if (negative > positive) return 'Tiêu cực';
   if (positive > negative) return 'Tích cực';
   if (field === 'trouble') return 'Tiêu cực';
