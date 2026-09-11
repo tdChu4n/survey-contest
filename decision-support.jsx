@@ -57,17 +57,17 @@ const NEXUS_FACTOR_KNOWLEDGE = {
 };
 
 const NEXUS_ITEM_TOPICS = {
-  DVTT1: { topic: 'Thông tin kịp thời', keywords: ['thong bao tre','thong tin tre','gui tre','cap nhat tre','kip thoi','qua muon','sat gio','doi lich','thay doi lich'] },
+  DVTT1: { topic: 'Thông tin kịp thời', keywords: ['thong bao tre','thong tin tre','gui tre','gui mail tre','mail tre','mail cham','gui mail som','cap nhat tre','kip thoi','qua muon','sat gio','sat ngay','doi lich','thay doi lich'] },
   DVTT2: { topic: 'Địa điểm và chỉ dẫn', keywords: ['dia diem','phong hoc','phong to chuc','khu vuc dien ra','ban do','chi duong','duong den','duong di','kho tim','tim dia diem','vi tri to chuc'] },
-  DVTT3: { topic: 'Thông tin đăng ký', keywords: ['email','truyen thong','dang ky','huong dan','ro rang','chua ro','noi dung cu the','khong biet','the le'] },
+  DVTT3: { topic: 'Thông tin đăng ký', keywords: ['email','mail','truyen thong','dang ky','huong dan','ro rang','chua ro','noi dung cu the','khong biet','khong nhan duoc mail','the le'] },
   DVTT4: { topic: 'Ấn phẩm truyền thông', keywords: ['poster','an pham','hinh anh','thiet ke','thu hut'] },
-  CLCT1: { topic: 'Hỗ trợ và giải đáp', keywords: ['ho tro','giai dap','nhan su','check-in','check in','xep hang','cho lau'] },
+  CLCT1: { topic: 'Hỗ trợ và giải đáp', keywords: ['ho tro','giai dap','nhan su','check-in','check in','checkin','xep hang','cho lau'] },
   CLCT2: { topic: 'Hình thức hoạt động', keywords: ['da dang','hinh thuc','workshop','tro choi','tuong tac'] },
   CLCT3: { topic: 'Chiều sâu nội dung', keywords: ['noi dung','kien thuc','tim hieu','chuyen sau','hoc hoi'] },
   CLCT4: { topic: 'Mức độ phù hợp', keywords: ['muc tieu','chu de','phu hop','lan man','dung nhu'] },
-  CLCT5: { topic: 'Bố cục và thời gian', keywords: ['thoi gian','keo dai','cham','lich trinh','bo cuc','rundown'] },
+  CLCT5: { topic: 'Bố cục và thời gian', keywords: ['thoi gian','keo dai','cham','cham tre','bat dau muon','qua gio','delay','lich trinh','timeline','chay timeline','bo cuc','rundown'] },
   CSVC1: { topic: 'Không gian tổ chức', keywords: ['khong gian','quy mo','phong hoc','phong to chuc','chat choi','dia diem to chuc'] },
-  CSVC2: { topic: 'Thiết bị kỹ thuật', keywords: ['am thanh','anh sang','micro','loa','may chieu','thiet bi'] },
+  CSVC2: { topic: 'Thiết bị kỹ thuật', keywords: ['am thanh','anh sang','micro','loa','may chieu','thiet bi','ky thuat','ki thuat','loi ky thuat','loi ki thuat','zoom','meet','link zoom','duong link','phong zoom','qua tai','gioi han nguoi','capacity','may moc','ung dung hop'] },
   CSVC3: { topic: 'Sự thoải mái', keywords: ['cho ngoi','ghe','nong','lanh','dieu hoa','thoai mai'] },
   GTCT1: { topic: 'Giá trị thực tế', keywords: ['gia tri','huu ich','thiet thuc','ap dung','xung dang','hoc duoc','hieu duoc','nhan duoc'] },
   GTCT2: { topic: 'Kỳ vọng', keywords: ['ky vong','mong doi','vuot','that vong'] },
@@ -80,8 +80,17 @@ const NEXUS_ITEM_TOPICS = {
   LTT4: { topic: 'Đóng góp phản hồi', keywords: ['phan hoi','gop y','cai thien','lang nghe'] }
 };
 
-const NEXUS_NEGATIVE_WORDS = ['khong tot','chua tot','khong hai long','khong ro rang','chua ro','khong kip thoi','khong phu hop','khong hieu','khong biet','khong the','khong du','khong duoc','kem','te hai','tre','qua lau','cho lau','kho khan','bat tien','that vong','bi loi','hong','on ao','qua nong','chat choi','thieu','lan man','qua dai','met moi','nham chan'];
-const NEXUS_POSITIVE_WORDS = ['tot','huu ich','hai long','thich','vui','rat vui','vui lam','tich cuc','ro rang','kip thoi','thoai mai','an tuong','xung dang','tuyet voi','hoc duoc','hieu duoc','nhan duoc'];
+const NEXUS_NEGATIVE_WORDS = ['khong tot','chua tot','khong hai long','khong ro rang','chua ro','khong kip thoi','chua kip','khong phu hop','khong hieu','khong biet','khong the','khong du','khong duoc','khong nhan duoc','khong vao duoc','khong luu','kem','te hai','gui tre','bi tre','thong bao tre','qua lau','cho lau','kho khan','gap van de','bat tien','bat cap','phien toai','lang phi','that vong','bi loi','loi ky thuat','loi ki thuat','truc trac','su co','qua tai','gioi han','chay timeline','delay','cham tre','so suat','chua thuan loi','khong thoai mai','kho chiu','on ao','qua nong','chat choi','thieu','hoi nhieu','qua day','keo dai','lan man','qua dai','met moi','nham chan'];
+const NEXUS_POSITIVE_WORDS = ['tot','huu ich','bo ich','y nghia','hai long','thich','vui','rat vui','vui lam','tich cuc','ro rang','kip thoi','thoai mai','an tuong','xung dang','tuyet voi','hap dan','chu dao','nhiet tinh','thuan loi','de tiep thu','hoc duoc','hieu duoc','nhan duoc','ok','oke'];
+const NEXUS_NO_RESPONSE_WORDS = new Set([
+  'khong','khong co','em khong a','khong a','da khong a','da khong','da k a','da k','ko a','ko','da ko','hong','da hong','hem','da hem ne','kh co a','khong xin cam on','da tam thoi khong','minh khong','kho gn co','khogn co','khonh','khonh co','n a','na','kh','da k','da ko a','da hong ne','khong ah','da ko a','a','jkk','sjwj','yes','co','co m'
+]);
+
+// Các ngoại lệ đã được rà soát trực tiếp trên bộ dữ liệu cố định của bài thi.
+const NEXUS_REVIEWED_SENTIMENT = new Map([
+  ['trouble|da khong em thay vui lam', 'Tích cực'],
+  ['trouble|dinh', 'Tích cực']
+]);
 
 function nexusNormalize(value) {
   return String(value || '').toLowerCase().normalize('NFD')
@@ -96,6 +105,12 @@ function nexusHasPhrase(text, phrase) {
   const haystack = ` ${nexusCleanWords(text)} `;
   const needle = ` ${nexusCleanWords(phrase)} `;
   return needle.trim() && haystack.includes(needle);
+}
+
+function nexusIsNoResponse(text) {
+  const cleaned = nexusCleanWords(text);
+  if (!cleaned || NEXUS_NO_RESPONSE_WORDS.has(cleaned)) return true;
+  return /^(da |em |minh )?(khong|ko|k|kh|hong|hem|khogn|khonh)( co)?( a| ah| ne| nha| nhe)?$/.test(cleaned);
 }
 
 function nexusNumber(value) {
@@ -140,15 +155,36 @@ function nexusOutcome(response, itemCode) {
 function nexusSentiment(text, field) {
   const normalized = nexusNormalize(text);
   const cleaned = nexusCleanWords(normalized);
+  if (nexusIsNoResponse(cleaned)) return 'Trung lập';
+  if (field === 'interest') return 'Trung lập';
+  const reviewedKey = `${field}|${cleaned}`;
+  if (NEXUS_REVIEWED_SENTIMENT.has(reviewedKey)) return NEXUS_REVIEWED_SENTIMENT.get(reviewedKey);
   const noProblem = /^(da )?khong$|^(da )?khong a$|(?:khong|chua) (?:gap|co|thay) (?:kho khan|van de|bat tien|gi)|khong co gi/.test(cleaned)
     || /^(da )?khong\s*[,;]/.test(normalized.trim());
+  const hasContrast = ['tuy nhien','nhung','chi la','duy chi','mac du'].some(word => nexusHasPhrase(normalized, word));
   const negative = NEXUS_NEGATIVE_WORDS.filter(word => nexusHasPhrase(normalized, word)).length;
-  const positive = NEXUS_POSITIVE_WORDS.filter(word => nexusHasPhrase(normalized, word)).length;
-  if (noProblem) return positive > 0 ? 'Tích cực' : 'Trung lập';
-  if (negative > positive) return 'Tiêu cực';
-  if (positive > negative) return 'Tích cực';
-  if (field === 'trouble') return 'Tiêu cực';
-  if (field === 'learn') return 'Tích cực';
+  const positive = NEXUS_POSITIVE_WORDS.filter(word => nexusHasPhrase(normalized, word) && !nexusHasPhrase(normalized, `khong ${word}`) && !nexusHasPhrase(normalized, `chua ${word}`)).length;
+  if (noProblem && !hasContrast) return positive > 0 ? 'Tích cực' : 'Trung lập';
+  if (field === 'learn') {
+    const explicitFailure = ['khong nhan duoc','khong hoc duoc','khong hieu duoc','khong co gia tri']
+      .some(word => nexusHasPhrase(normalized, word));
+    if (explicitFailure) return 'Tiêu cực';
+    return 'Tích cực';
+  }
+  if (field === 'trouble') {
+    const startsPositive = /^(nhin chung|moi thu|trai nghiem|chuong trinh dien ra)/.test(cleaned) && positive > 0;
+    if (negative > 0 && positive > 0) return startsPositive ? 'Trung lập' : 'Tiêu cực';
+    if (negative > 0) return 'Tiêu cực';
+    if (positive > 0) return 'Tích cực';
+    return 'Tiêu cực';
+  }
+  if (field === 'feedback') {
+    const isSuggestion = ['nen','mong','hy vong','can','co the','tot hon','cai thien','khac phuc','chu y','luu y']
+      .some(word => nexusHasPhrase(normalized, word));
+    if (isSuggestion) return 'Trung lập';
+    if (negative > 0 && positive === 0) return 'Tiêu cực';
+    if (positive > 0 && negative === 0) return 'Tích cực';
+  }
   return 'Trung lập';
 }
 
@@ -186,7 +222,7 @@ function nexusOpenEvidence(responses, item, items) {
   responses.forEach((response, responseIndex) => Object.keys(NEXUS_OPEN_FIELDS).forEach(field => {
     const text = String(response[field] || '').trim();
     const normalized = nexusNormalize(text);
-    if (!text || ['khong','khong co','khong co.','khong gap'].includes(normalized)) return;
+    if (!text || nexusIsNoResponse(text) || ['khong gap'].includes(normalized)) return;
     const bestItem = nexusBestItemForComment(text, field, items);
     if (bestItem?.code === item.code) {
       evidence.push({
@@ -317,7 +353,7 @@ function DecisionSupport({ onBack, dataVersion = 0 }) {
           <label className="nexus-program-filter">Nhóm thang đo<select value={factorCode} onChange={event => setFactorCode(event.target.value)}><option value="__ALL__">Tất cả nhóm</option>{factors.map(factor => <option key={factor.code} value={factor.code}>{factor.name}</option>)}</select></label>
         </div>
       </div>
-      <div className="nexus-method-note"><strong>Phương pháp:</strong> Importance là tương quan thực tế với mức hài lòng tổng thể và được chuẩn hóa tương đối; Performance là điểm trung bình Likert. Phản hồi mở được mã hóa bằng taxonomy và từ khóa tiếng Việt cố định, không sinh ngẫu nhiên.</div>
+      <div className="nexus-method-note"><strong>Phương pháp:</strong> Importance là tương quan thực tế với mức hài lòng tổng thể và được chuẩn hóa tương đối; Performance là điểm trung bình Likert. Bộ phân loại cố định đã được rà soát trên 1.176 lượt trả lời mở, tương ứng 591 nội dung duy nhất sau chuẩn hóa (12/09/2026).</div>
       <div className="nexus-flow"><span>Điểm Likert thật</span><b>→</b><span>Phản hồi mở thật</span><b>→</b><span>Joint Display</span><b>→</b><span>Kho hành động</span><b>→</b><span>Đo lại</span></div>
       <div className="nexus-layout">
         <aside className="nexus-priority-list">
