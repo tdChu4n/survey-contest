@@ -298,6 +298,107 @@ function buildNexusInsights(responses) {
   }).sort((a, b) => b.priorityScore - a.priorityScore);
 }
 
+function buildNexusConstructs(insights) {
+  const groups = new Map();
+  insights.forEach(item => {
+    if (!groups.has(item.factorCode)) groups.set(item.factorCode, []);
+    groups.get(item.factorCode).push(item);
+  });
+  const constructs = [...groups.entries()].map(([code, items]) => ({
+    code,
+    name: items[0].factor,
+    performance: nexusMean(items.map(item => item.performance)),
+    importance: nexusMean(items.map(item => item.importance)),
+    priorityScore: Math.round(nexusMean(items.map(item => item.priorityScore))),
+    topItem: [...items].sort((a, b) => b.priorityScore - a.priorityScore)[0],
+    itemCount: items.length,
+    n: Math.max(...items.map(item => item.n))
+  }));
+  const importanceMedian = nexusMedian(constructs.map(item => item.importance));
+  const performanceMedian = nexusMedian(constructs.map(item => item.performance));
+  return {
+    importanceMedian,
+    performanceMedian,
+    constructs: constructs.map(item => ({
+      ...item,
+      classification: nexusClassification(item.importance, item.performance, importanceMedian, performanceMedian)
+    })).sort((a, b) => b.priorityScore - a.priorityScore)
+  };
+}
+
+function NexusIPMAChart({ insights, selectedFactor, onSelect }) {
+  const model = React.useMemo(() => buildNexusConstructs(insights), [insights]);
+  if (!model.constructs.length) return null;
+  const width = 720, height = 390;
+  const margin = { left: 62, right: 28, top: 30, bottom: 52 };
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+  const performances = model.constructs.map(item => item.performance);
+  let xMin = Math.max(1, Math.min(...performances) - 0.35);
+  let xMax = Math.min(7, Math.max(...performances) + 0.35);
+  if (xMax - xMin < 0.8) {
+    const middle = (xMin + xMax) / 2;
+    xMin = Math.max(1, middle - 0.4);
+    xMax = Math.min(7, middle + 0.4);
+  }
+  const x = value => margin.left + (value - xMin) / (xMax - xMin) * plotWidth;
+  const y = value => margin.top + (1 - value) * plotHeight;
+  const splitX = x(model.performanceMedian);
+  const splitY = y(model.importanceMedian);
+  const colors = { urgent: '#d95b27', maintain: '#1e65b7', watch: '#6b3bb4', inspect: '#d69a24' };
+  const xTicks = Array.from({ length: 5 }, (_, index) => xMin + (xMax - xMin) * index / 4);
+  const yTicks = [0, .25, .5, .75, 1];
+
+  return (
+    <section className="nexus-ipma-section">
+      <div className="nexus-ipma-heading">
+        <div><span className="nexus-eyebrow">PHÂN TÍCH & ƯU TIÊN</span><h2>Ma trận Importance × Performance (IPMA)</h2><p>Điểm cắt là trung vị của 6 nhóm trong phạm vi hoạt động đang chọn. Trục ngang được thu phóng để nhìn rõ chênh lệch thực tế.</p></div>
+        <div className="nexus-ipma-legend"><span className="urgent">Ưu tiên cải thiện</span><span className="maintain">Duy trì</span><span className="watch">Theo dõi</span><span className="inspect">Cần xem sâu</span></div>
+      </div>
+      <div className="nexus-ipma-grid">
+        <div className="nexus-ipma-chart-wrap">
+          <svg className="nexus-ipma-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Ma trận Importance và Performance của các nhóm thang đo">
+            <rect x={margin.left} y={margin.top} width={splitX - margin.left} height={splitY - margin.top} fill="#fff3eb" />
+            <rect x={splitX} y={margin.top} width={width - margin.right - splitX} height={splitY - margin.top} fill="#eef6ff" />
+            <rect x={margin.left} y={splitY} width={splitX - margin.left} height={height - margin.bottom - splitY} fill="#fff9e9" />
+            <rect x={splitX} y={splitY} width={width - margin.right - splitX} height={height - margin.bottom - splitY} fill="#f5effc" />
+            {yTicks.map(tick => <g key={tick}><line x1={margin.left} x2={width - margin.right} y1={y(tick)} y2={y(tick)} stroke="#dfe6ee" strokeWidth="1" /><text x={margin.left - 12} y={y(tick) + 4} textAnchor="end" className="nexus-axis-label">{Math.round(tick * 100)}%</text></g>)}
+            {xTicks.map(tick => <g key={tick}><line x1={x(tick)} x2={x(tick)} y1={margin.top} y2={height - margin.bottom} stroke="#e8edf3" strokeWidth="1" /><text x={x(tick)} y={height - margin.bottom + 22} textAnchor="middle" className="nexus-axis-label">{tick.toFixed(2)}</text></g>)}
+            <line x1={splitX} x2={splitX} y1={margin.top} y2={height - margin.bottom} stroke="#78879a" strokeDasharray="6 5" />
+            <line x1={margin.left} x2={width - margin.right} y1={splitY} y2={splitY} stroke="#78879a" strokeDasharray="6 5" />
+            <text x={margin.left + 10} y={margin.top + 18} className="nexus-quadrant-label">ƯU TIÊN CẢI THIỆN</text>
+            <text x={splitX + 10} y={margin.top + 18} className="nexus-quadrant-label">DUY TRÌ</text>
+            <text x={margin.left + 10} y={height - margin.bottom - 10} className="nexus-quadrant-label">CẦN XEM SÂU</text>
+            <text x={splitX + 10} y={height - margin.bottom - 10} className="nexus-quadrant-label">THEO DÕI</text>
+            {model.constructs.map((item, index) => {
+              const pointX = x(item.performance), pointY = y(item.importance);
+              const isSelected = selectedFactor === item.code;
+              const labelAbove = index % 2 === 0;
+              return <g key={item.code} className={`nexus-ipma-point${isSelected ? ' is-selected' : ''}`} onClick={() => onSelect(item)} role="button" tabIndex="0" onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') onSelect(item); }}>
+                <circle cx={pointX} cy={pointY} r={isSelected ? 11 : 9} fill={colors[item.classification.tone]} stroke="#fff" strokeWidth="3" />
+                <text x={pointX + 12} y={pointY + (labelAbove ? -10 : 18)} className="nexus-point-label">{item.code}</text>
+                <title>{`${item.name}: Performance ${item.performance.toFixed(2)}/7, Importance ${Math.round(item.importance * 100)}%, ${item.classification.label}`}</title>
+              </g>;
+            })}
+            <text x={margin.left + plotWidth / 2} y={height - 8} textAnchor="middle" className="nexus-axis-title">Performance — Điểm trung bình Likert</text>
+            <text x="16" y={margin.top + plotHeight / 2} textAnchor="middle" transform={`rotate(-90 16 ${margin.top + plotHeight / 2})`} className="nexus-axis-title">Importance tương đối</text>
+          </svg>
+        </div>
+        <div className="nexus-ipma-table-wrap">
+          <table className="nexus-ipma-table">
+            <thead><tr><th>Nhóm thang đo</th><th>P</th><th>I</th><th>Phân loại</th></tr></thead>
+            <tbody>{model.constructs.map(item => <tr key={item.code} className={selectedFactor === item.code ? 'is-selected' : ''} onClick={() => onSelect(item)}>
+              <td><strong>{item.name}</strong><small>{item.itemCount} tiêu chí · n={item.n}</small></td>
+              <td>{item.performance.toFixed(2)}</td><td>{Math.round(item.importance * 100)}%</td><td><span className={`nexus-status nexus-status--${item.classification.tone}`}>{item.classification.label}</span></td>
+            </tr>)}</tbody>
+          </table>
+          <p className="nexus-ipma-hint">Bấm một điểm hoặc một dòng để xem các tiêu chí chi tiết của nhóm.</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function MiniLikertDistribution({ values }) {
   const total = values.reduce((sum, value) => sum + value, 0) || 1;
   const colors = ['#c2413a','#df6548','#e99b3a','#a8b1bd','#64a8c8','#2e9a78','#08756f'];
@@ -342,6 +443,12 @@ function DecisionSupport({ onBack, dataVersion = 0 }) {
     setSaved(true);
   };
   const displayedEvidence = [...selected.evidence].sort((a, b) => (a.sentiment === 'Tiêu cực' ? -1 : 1) - (b.sentiment === 'Tiêu cực' ? -1 : 1)).slice(0, 8);
+  const selectConstruct = construct => {
+    setFactorCode(construct.code);
+    setSelectedCode(construct.topItem.code);
+    setCheckedActions({});
+    setSaved(false);
+  };
 
   return (
     <div className="admin-subpage nexus-page">
@@ -355,6 +462,7 @@ function DecisionSupport({ onBack, dataVersion = 0 }) {
       </div>
       <div className="nexus-method-note"><strong>Phương pháp:</strong> Importance là tương quan thực tế với mức hài lòng tổng thể và được chuẩn hóa tương đối; Performance là điểm trung bình Likert. Bộ phân loại cố định đã được rà soát trên 1.176 lượt trả lời mở, tương ứng 591 nội dung duy nhất sau chuẩn hóa (12/09/2026).</div>
       <div className="nexus-flow"><span>Điểm Likert thật</span><b>→</b><span>Phản hồi mở thật</span><b>→</b><span>Joint Display</span><b>→</b><span>Kho hành động</span><b>→</b><span>Đo lại</span></div>
+      <NexusIPMAChart insights={insights} selectedFactor={factorCode === '__ALL__' ? '' : factorCode} onSelect={selectConstruct} />
       <div className="nexus-layout">
         <aside className="nexus-priority-list">
           <div className="nexus-panel-title">Ranking — Cần sửa gì trước?</div>
