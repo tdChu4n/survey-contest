@@ -86,6 +86,27 @@ window.normalizeProgramName = function(program) {
   return String(program || "").replace(/\s+/g, " ").trim();
 };
 
+// The legacy Apps Script exposes the three demographic columns under shifted
+// property names (cohort -> gender, faculty -> cohort, gender -> faculty).
+// Detect values by their shape so reports remain compatible with both schemas.
+window.normalizeSurveyResponse = function(response) {
+  const source = response || {};
+  const clean = value => String(value ?? "").replace(/\s+/g, " ").trim();
+  const originalCohort = clean(source.cohort);
+  const originalFaculty = clean(source.faculty);
+  const originalGender = clean(source.gender);
+  const isGender = value => /^(nam|nữ|nu)$/i.test(value);
+  const isFaculty = value => /^(khoa\b|khác$|khac$)/i.test(value);
+  const isCohort = value => /^\d{2,4}$/.test(value);
+
+  return {
+    ...source,
+    cohort: isCohort(originalCohort) ? originalCohort : (isCohort(originalFaculty) ? originalFaculty : originalCohort),
+    faculty: isFaculty(originalFaculty) ? originalFaculty : (isFaculty(originalGender) ? originalGender : originalFaculty),
+    gender: isGender(originalGender) ? originalGender : (isGender(originalCohort) ? originalCohort : originalGender)
+  };
+};
+
 window.filterByProgram = function(program) {
   if (!program || program === "__ALL__") return window.SURVEY_RESPONSES;
   const normalizedProgram = window.normalizeProgramName(program);

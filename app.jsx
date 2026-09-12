@@ -250,7 +250,8 @@ function ActivityReport({ onBack }) {
   const programInfo = window.PROGRAM_INFO || {};
 
   const rows = useMemo(() => programs.map(program => {
-    const programResponses = responses.filter(r => r.program === program);
+    const selectedName = window.normalizeProgramName(program);
+    const programResponses = responses.filter(r => window.normalizeProgramName(r.program) === selectedName);
     const participants = Number(participantMap[program]) || 0;
     const scored = programResponses.map(r => Number(r.overall)).filter(v => Number.isFinite(v) && v > 0);
     const average = scored.length ? scored.reduce((sum, value) => sum + value, 0) / scored.length : 0;
@@ -408,6 +409,7 @@ function App() {
   const [selectedPrograms, setSelectedPrograms] = useState(() => new Set());
   const [dataKey, setDataKey] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [updatedAt, setUpdatedAt] = useState(null);
   const [mailbox, setMailbox] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -433,6 +435,7 @@ function App() {
 
   const loadData = () => {
     setLoading(true);
+    setLoadError('');
     if (!APPS_SCRIPT_URL) {
       setUpdatedAt(new Date().toLocaleTimeString('vi-VN'));
       setDataKey(k => k + 1);
@@ -442,23 +445,22 @@ function App() {
     fetch(APPS_SCRIPT_URL + '?action=getResponses')
       .then(r => r.json())
       .then(data => {
-        if (data.success) {
-          window.SURVEY_RESPONSES = data.responses || [];
-          if (data.programs?.length > 0) {
-            window.PROGRAMS = data.programs;
-          }
-          window.PARTICIPANT_MAP = data.participantMap || {};
-          if (data.programYears) {
-            window.PROGRAM_YEARS = { ...(window.PROGRAM_YEARS || {}), ...data.programYears };
-          }
-          if (data.programInfo) {
-            window.PROGRAM_INFO = { ...(window.PROGRAM_INFO || {}), ...data.programInfo };
-          }
-          setUpdatedAt(new Date().toLocaleTimeString('vi-VN'));
-          setDataKey(k => k + 1);
+        if (!data.success) throw new Error(data.error || 'Backend không trả dữ liệu hợp lệ');
+        window.SURVEY_RESPONSES = (data.responses || []).map(window.normalizeSurveyResponse);
+        if (data.programs?.length > 0) {
+          window.PROGRAMS = data.programs;
         }
+        window.PARTICIPANT_MAP = data.participantMap || {};
+        if (data.programYears) {
+          window.PROGRAM_YEARS = { ...(window.PROGRAM_YEARS || {}), ...data.programYears };
+        }
+        if (data.programInfo) {
+          window.PROGRAM_INFO = { ...(window.PROGRAM_INFO || {}), ...data.programInfo };
+        }
+        setUpdatedAt(new Date().toLocaleTimeString('vi-VN'));
+        setDataKey(k => k + 1);
       })
-      .catch(() => { })
+      .catch(error => setLoadError(error?.message || 'Không thể tải dữ liệu khảo sát'))
       .finally(() => setLoading(false));
   };
 
@@ -514,7 +516,15 @@ function App() {
         <ActivityReport onBack={() => setView('menu')} />
       )}
 
-      {view === 'dashboard' && (
+      {view === 'dashboard' && loading && (
+        <div className="data-load-state">Đang tải dữ liệu khảo sát từ hệ thống...</div>
+      )}
+
+      {view === 'dashboard' && !loading && loadError && (
+        <div className="data-load-state data-load-state--error"><strong>Không thể tải dữ liệu khảo sát.</strong><span>{loadError}</span><button onClick={loadData}>Thử lại</button></div>
+      )}
+
+      {view === 'dashboard' && !loading && !loadError && (
         <div className="dashboard-layout">
           <ProgramSidebar
             selectedPrograms={selectedPrograms}

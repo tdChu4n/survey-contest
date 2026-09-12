@@ -19,7 +19,8 @@ function ActivityCard({ selectedPrograms, responses }) {
 
   const rows = programs.map(p => {
     const info = infoMap[p] || {};
-    const rs   = responses.filter(r => r.program === p);
+    const selectedName = window.normalizeProgramName(p);
+    const rs = responses.filter(r => window.normalizeProgramName(r.program) === selectedName);
     const avg  = rs.length
       ? (rs.reduce((a, r) => a + r.overall, 0) / rs.length).toFixed(2)
       : "—";
