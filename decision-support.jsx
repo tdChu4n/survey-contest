@@ -456,7 +456,7 @@ function DecisionSupport({ onBack, dataVersion = 0 }) {
       <div className="admin-subpage__heading nexus-heading">
         <div><h1>NEXUS — Từ phản hồi thật đến hành động</h1><p>Đang phân tích {responses.length} phiếu · 21 tiêu chí + 1 điểm tổng thể · 4 trường phản hồi mở</p></div>
         <div className="nexus-filter-row">
-          <label className="nexus-program-filter">Hoạt động<select value={program} onChange={event => setProgram(event.target.value)}><option value="__ALL__">Tất cả hoạt động</option>{programs.map(name => <option key={name}>{name}</option>)}</select></label>
+          <label className="nexus-program-filter">Hoạt động<select value={program} onChange={event => setProgram(event.target.value)}><option value="__ALL__">Tất cả hoạt động</option>{programs.map(name => <option key={name} value={name}>{name}</option>)}</select></label>
           <label className="nexus-program-filter">Nhóm thang đo<select value={factorCode} onChange={event => setFactorCode(event.target.value)}><option value="__ALL__">Tất cả nhóm</option>{factors.map(factor => <option key={factor.code} value={factor.code}>{factor.name}</option>)}</select></label>
         </div>
       </div>

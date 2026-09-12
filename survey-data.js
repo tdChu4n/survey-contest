@@ -79,16 +79,24 @@ window.PARTICIPANT_MAP = {};
 
 const mean = (arr) => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
 
+// Program names coming from Sheets may contain line breaks while a browser
+// renders the same option with ordinary spaces. Normalize whitespace before
+// comparing so both representations still refer to the same activity.
+window.normalizeProgramName = function(program) {
+  return String(program || "").replace(/\s+/g, " ").trim();
+};
+
 window.filterByProgram = function(program) {
   if (!program || program === "__ALL__") return window.SURVEY_RESPONSES;
-  return window.SURVEY_RESPONSES.filter(r => r.program === program);
+  const normalizedProgram = window.normalizeProgramName(program);
+  return window.SURVEY_RESPONSES.filter(r => window.normalizeProgramName(r.program) === normalizedProgram);
 };
 
 // Lọc theo tập hợp nhiều chương trình (Set hoặc Array)
 window.filterByPrograms = function(programs) {
-  const set = programs instanceof Set ? programs : new Set(programs);
+  const set = new Set([...(programs instanceof Set ? programs : new Set(programs))].map(window.normalizeProgramName));
   if (!set || set.size === 0) return [];
-  return window.SURVEY_RESPONSES.filter(r => set.has(r.program));
+  return window.SURVEY_RESPONSES.filter(r => set.has(window.normalizeProgramName(r.program)));
 };
 
 // Mean per item code (e.g. CLCT1) for a set of responses.
