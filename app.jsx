@@ -4,6 +4,65 @@ const { useState, useMemo, useEffect } = React;
 
 // ── Live data từ Google Sheets ────────────────────────
 const APPS_SCRIPT_URL = window.CONTEST_CONFIG.appsScriptUrl;
+
+// Apps Script chạy xong trong ~3s, nhưng chặng script.googleusercontent.com
+// phục vụ kết quả có thể bị Google giảm tốc tới 20-60s. Vì vậy timeout để
+// rộng (fetch mặc định không có timeout nên request treo vĩnh viễn) và chỉ
+// thử lại một lần - retry dồn dập chỉ làm việc giảm tốc nặng thêm.
+const FETCH_TIMEOUT_MS = 90000;
+const DATA_CACHE_KEY   = 'contest.surveyData.v1';
+
+async function fetchJson(url, { timeoutMs = FETCH_TIMEOUT_MS, retries = 1 } = {}) {
+  for (let attempt = 0; ; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res  = await fetch(url, { signal: controller.signal });
+      const type = res.headers.get('content-type') || '';
+      if (!res.ok) throw new Error(`Backend trả mã ${res.status} — Apps Script đang bị giảm tốc, thử lại sau vài phút.`);
+      if (!type.includes('json')) throw new Error('Backend trả về HTML thay vì JSON — Apps Script tạm thời không phục vụ được.');
+      return await res.json();
+    } catch (err) {
+      const timedOut = err && err.name === 'AbortError';
+      if (attempt >= retries) {
+        if (timedOut) throw new Error(`Quá ${Math.round(timeoutMs / 1000)} giây chưa có phản hồi — Apps Script đang bị giảm tốc.`);
+        throw err;
+      }
+      await new Promise(r => setTimeout(r, 3000));
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+}
+
+// Cache bản ghi gần nhất để lần vào sau có dữ liệu ngay, và để khi backend
+// hỏng vẫn xem được số liệu cũ thay vì màn hình trắng.
+function readDataCache() {
+  try {
+    const raw = localStorage.getItem(DATA_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function writeDataCache(payload) {
+  try {
+    localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), payload }));
+  } catch (e) { /* hết quota thì bỏ qua, không ảnh hưởng luồng chính */ }
+}
+
+function applyResponseData(data) {
+  window.SURVEY_RESPONSES = (data.responses || []).map(window.normalizeSurveyResponse);
+  if (data.programs?.length > 0) {
+    window.PROGRAMS = data.programs;
+  }
+  window.PARTICIPANT_MAP = data.participantMap || {};
+  if (data.programYears) {
+    window.PROGRAM_YEARS = { ...(window.PROGRAM_YEARS || {}), ...data.programYears };
+  }
+  if (data.programInfo) {
+    window.PROGRAM_INFO = { ...(window.PROGRAM_INFO || {}), ...data.programInfo };
+  }
+}
 // ─────────────────────────────────────────────────────
 
 function Footer() {
@@ -411,6 +470,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [updatedAt, setUpdatedAt] = useState(null);
+  const [isStale, setIsStale] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const [mailbox, setMailbox] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -433,8 +494,8 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const loadData = () => {
-    setLoading(true);
+  const loadData = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setLoadError('');
     if (!APPS_SCRIPT_URL) {
       setUpdatedAt(new Date().toLocaleTimeString('vi-VN'));
@@ -442,37 +503,51 @@ function App() {
       setLoading(false);
       return;
     }
-    fetch(APPS_SCRIPT_URL + '?action=getResponses')
-      .then(r => r.json())
-      .then(data => {
-        if (!data.success) throw new Error(data.error || 'Backend không trả dữ liệu hợp lệ');
-        window.SURVEY_RESPONSES = (data.responses || []).map(window.normalizeSurveyResponse);
-        if (data.programs?.length > 0) {
-          window.PROGRAMS = data.programs;
-        }
-        window.PARTICIPANT_MAP = data.participantMap || {};
-        if (data.programYears) {
-          window.PROGRAM_YEARS = { ...(window.PROGRAM_YEARS || {}), ...data.programYears };
-        }
-        if (data.programInfo) {
-          window.PROGRAM_INFO = { ...(window.PROGRAM_INFO || {}), ...data.programInfo };
-        }
-        setUpdatedAt(new Date().toLocaleTimeString('vi-VN'));
-        setDataKey(k => k + 1);
-      })
-      .catch(error => setLoadError(error?.message || 'Không thể tải dữ liệu khảo sát'))
-      .finally(() => setLoading(false));
+
+    try {
+      const data = await fetchJson(APPS_SCRIPT_URL + '?action=getResponses');
+      if (!data.success) throw new Error(data.error || 'Backend không trả dữ liệu hợp lệ');
+      applyResponseData(data);
+      writeDataCache(data);
+      setUpdatedAt(new Date().toLocaleTimeString('vi-VN'));
+      setIsStale(false);
+      setDataKey(k => k + 1);
+    } catch (error) {
+      setLoadError(error?.message || 'Không thể tải dữ liệu khảo sát');
+    } finally {
+      setLoading(false);
+    }
+
+    // Hòm thư gọi SAU khi đã xong dữ liệu chính. Trước đây hai request chạy
+    // song song, nhân đôi áp lực lên đúng chặng đang bị giảm tốc.
+    try {
+      const mb = await fetchJson(APPS_SCRIPT_URL + '?action=getMailbox', { retries: 0 });
+      if (mb.success) setMailbox(mb.entries || []);
+    } catch (e) { /* hòm thư hỏng không được chặn dashboard */ }
   };
 
   useEffect(() => {
-    loadData();
-
-    if (!APPS_SCRIPT_URL) return;
-    fetch(APPS_SCRIPT_URL + '?action=getMailbox')
-      .then(r => r.json())
-      .then(data => { if (data.success) setMailbox(data.entries || []); })
-      .catch(() => { });
+    const cached = readDataCache();
+    if (cached && cached.payload) {
+      // Hiện ngay số liệu lần trước, rồi làm mới ngầm ở nền.
+      applyResponseData(cached.payload);
+      setUpdatedAt(new Date(cached.savedAt).toLocaleTimeString('vi-VN'));
+      setIsStale(true);
+      setDataKey(k => k + 1);
+      setLoading(false);
+      loadData({ silent: true });
+    } else {
+      loadData();
+    }
   }, []);
+
+  // Đếm giây để người dùng biết trang còn sống khi backend phản hồi chậm.
+  useEffect(() => {
+    if (!loading) { setElapsed(0); return; }
+    const startedAt = Date.now();
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [loading]);
 
   const responses = useMemo(
     () => selectedPrograms.size === 0 ? [] : window.filterByPrograms(selectedPrograms),
@@ -503,8 +578,8 @@ function App() {
       <TopNav />
       {!loading && updatedAt && (
         <div className="admin-status-row">
-          <span>✓ Cập nhật lúc {updatedAt}</span>
-          <button onClick={() => window.location.reload()}>↻ Làm mới</button>
+          <span>{isStale ? '⚠ Số liệu lưu tạm lúc' : '✓ Cập nhật lúc'} {updatedAt}</span>
+          <button onClick={() => loadData()}>↻ Làm mới</button>
         </div>
       )}
 
@@ -517,14 +592,28 @@ function App() {
       )}
 
       {view === 'dashboard' && loading && (
-        <div className="data-load-state">Đang tải dữ liệu khảo sát từ hệ thống...</div>
+        <div className="data-load-state" style={{ flexDirection: 'column', gap: 6 }}>
+          <span>Đang tải dữ liệu khảo sát từ hệ thống... ({elapsed}s)</span>
+          {elapsed >= 10 && (
+            <span style={{ fontSize: 13, color: '#94a3b8' }}>
+              Apps Script đang phản hồi chậm. Trang vẫn đang chờ, tối đa {Math.round(FETCH_TIMEOUT_MS / 1000)} giây.
+            </span>
+          )}
+        </div>
       )}
 
-      {view === 'dashboard' && !loading && loadError && (
-        <div className="data-load-state data-load-state--error"><strong>Không thể tải dữ liệu khảo sát.</strong><span>{loadError}</span><button onClick={loadData}>Thử lại</button></div>
+      {view === 'dashboard' && !loading && loadError && dataKey === 0 && (
+        <div className="data-load-state data-load-state--error"><strong>Không thể tải dữ liệu khảo sát.</strong><span>{loadError}</span><button onClick={() => loadData()}>Thử lại</button></div>
       )}
 
-      {view === 'dashboard' && !loading && !loadError && (
+      {view === 'dashboard' && !loading && loadError && dataKey > 0 && (
+        <div style={{ margin: '0 20px 12px', padding: '10px 14px', borderRadius: 8, background: '#fff7ed', border: '1px solid #fed7aa', color: '#9a3412', fontSize: 13 }}>
+          Đang hiển thị số liệu lưu tạm. Không làm mới được: {loadError}
+          <button onClick={() => loadData()} style={{ marginLeft: 10, fontWeight: 700, color: '#9a3412', textDecoration: 'underline' }}>Thử lại</button>
+        </div>
+      )}
+
+      {view === 'dashboard' && !loading && (!loadError || dataKey > 0) && (
         <div className="dashboard-layout">
           <ProgramSidebar
             selectedPrograms={selectedPrograms}
