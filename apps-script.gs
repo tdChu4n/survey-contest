@@ -238,6 +238,37 @@ function handleSubmitSurvey(p) {
 
 
 // ── Trả toàn bộ dữ liệu phản hồi cho admin dashboard ───────────
+// Sheet "Responses" đã đổi cấu trúc một lần (lúc bổ sung các cột họ tên,
+// MSSV, SĐT...). Dòng ghi TRƯỚC lần đổi đó giữ thứ tự  gender | cohort | faculty
+// ở cột 8-9-10, còn dòng ghi SAU theo thứ tự  cohort | faculty | gender.
+// Hàm này nhận diện từng dòng theo nội dung rồi trả về đúng ba giá trị,
+// nhờ vậy không phải sửa dữ liệu đã lưu trong Sheet.
+const GENDER_VALUES = ['Nam', 'Nữ'];
+
+function readDemographics(r) {
+  const c8  = String(r[8]  || '').trim();
+  const c9  = String(r[9]  || '').trim();
+  const c10 = String(r[10] || '').trim();
+
+  let isNewLayout;
+  if (GENDER_VALUES.indexOf(c10) >= 0) {
+    isNewLayout = true;          // giới tính nằm ở cột 10 -> cấu trúc mới
+  } else if (GENDER_VALUES.indexOf(c8) >= 0) {
+    isNewLayout = false;         // giới tính nằm ở cột 8  -> cấu trúc cũ
+  } else {
+    // Cả hai cột đều khuyết giới tính. Chỉ dòng theo cấu trúc mới mới có
+    // các cột thông tin cá nhân bổ sung, nên dùng đó làm căn cứ.
+    isNewLayout = [4, 5, 6, 7, 11, 12, 13, 14].some(function (i) {
+      return String(r[i] || '').trim() !== '';
+    });
+  }
+
+  return isNewLayout
+    ? { cohort: c8, faculty: c9,  gender: c10 }
+    : { cohort: c9, faculty: c10, gender: c8  };
+}
+
+
 function handleGetResponses() {
   const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SHEET_RESPONSES);
@@ -248,13 +279,14 @@ function handleGetResponses() {
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     if (!String(r[1]||'').trim()) continue;
+    const dem = readDemographics(r);
     responses.push({
       id: 'R'+String(i).padStart(3,'0'), ts: fmtDate(r[0]),
       email: String(r[1]||''), year: String(r[2]||''),
       program: String(r[3]||''), 
       lastName: String(r[4]||''), firstName: String(r[5]||''), studentId: String(r[6]||''),
-      studentClass: String(r[7]||''), cohort: String(r[8]||''), faculty: String(r[9]||''),
-      gender: String(r[10]||''), phone: String(r[11]||''), emailUeh: String(r[12]||''),
+      studentClass: String(r[7]||''), cohort: dem.cohort, faculty: dem.faculty,
+      gender: dem.gender, phone: String(r[11]||''), emailUeh: String(r[12]||''),
       emailOther: String(r[13]||''), facebook: String(r[14]||''),
       DVTT1:num(r[15]),DVTT2:num(r[16]),DVTT3:num(r[17]),DVTT4:num(r[18]),
       CLCT1:num(r[19]),CLCT2:num(r[20]),CLCT3:num(r[21]),CLCT4:num(r[22]),CLCT5:num(r[23]),
@@ -527,15 +559,16 @@ function syncAnonymizedSnapshot() {
     if (!String(row[1] || '').trim()) continue;
     const sourceProgram = String(row[3] || '').trim();
     if (!programMap[sourceProgram]) continue;
-    const cohortKey = String(row[8] || '').trim();
-    const groupKey = String(row[9] || '').trim();
+    const dem = readDemographics(row);
+    const cohortKey = dem.cohort;
+    const groupKey = dem.faculty;
     if (cohortKey && !cohortMap[cohortKey]) cohortMap[cohortKey] = 'Nhóm năm học ' + (Object.keys(cohortMap).length + 1);
     if (groupKey && !groupMap[groupKey]) groupMap[groupKey] = 'Nhóm ngành ' + String.fromCharCode(65 + (Object.keys(groupMap).length % 26));
     const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + ':' + String(row[1]).toLowerCase());
     const anonymousId = 'P-' + digest.slice(0, 12).map(b => ('0' + ((b + 256) % 256).toString(16)).slice(-2)).join('');
     cleanResponses.push([
       row[0], anonymousId, row[2] || '', programMap[sourceProgram],
-      '', '', '', '', cohortMap[cohortKey] || '', groupMap[groupKey] || '', row[10] || '', '', '', '', '',
+      '', '', '', '', cohortMap[cohortKey] || '', groupMap[groupKey] || '', dem.gender || '', '', '', '', '',
       ...row.slice(15, 37), '', '', '', ''
     ]);
   }
